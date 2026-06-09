@@ -1,0 +1,20 @@
+{
+  "region": "right side of midbrain",
+  "hierarchy_level": 3,
+  "parent": "midbrain",
+  "embedded_nuclei": [
+    "right substantia nigra",
+    "right red nucleus",
+    "right superior colliculus",
+    "right inferior colliculus",
+    "brachia of right superior colliculus",
+    "brachia of right inferior colliculus"
+  ],
+  "references": {
+    "mesencephalon_statpearls_ncbi": "https://www.ncbi.nlm.nih.gov/books/NBK551509/",
+    "red_nucleus_springer": "https://link.springer.com/article/10.1007/s00429-020-02171-x",
+    "red_nucleus_sciencedirect": "https://www.sciencedirect.com/topics/neuroscience/red-nucleus",
+    "midbrain_teachmeanatomy": "https://teachmeanatomy.info/neuroanatomy/brainstem/midbrain/",
+    "midbrain_maladies_radiology": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3366251/"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "region": "Brain",
+  "hierarchy_level": 1,
+  "synonyms": ["encephalon"],
+  "references": {
+    "overview_nervous_system_uthealth": "https://nba.uth.tmc.edu/neuroscience/m/s2/chapter01.html",
+    "human_brain_wikipedia": "https://en.wikipedia.org/wiki/Human_brain",
+    "neural_tube_differentiation_ncbi": "https://www.ncbi.nlm.nih.gov/books/NBK10034/",
+    "major_brain_subdivisions_ncbi": "https://www.ncbi.nlm.nih.gov/books/NBK10954/",
+    "developmental_divisions_physiopedia": "https://www.physio-pedia.com/Brain:_Developmental_Divisions"
+  }
+}

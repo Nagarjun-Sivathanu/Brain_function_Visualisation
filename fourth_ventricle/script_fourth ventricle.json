@@ -1,0 +1,13 @@
+{
+  "region": "fourth ventricle",
+  "hierarchy_level": 3,
+  "parent": "rhombencephalon",
+  "type": "CSF-filled ventricular cavity",
+  "references": {
+    "fourth_ventricle_statpearls_ncbi": "https://www.ncbi.nlm.nih.gov/books/NBK546577/",
+    "fourth_ventricle_kenhub": "https://www.kenhub.com/en/library/anatomy/the-fourth-ventricle",
+    "choroid_plexus_fourth_ventricle_imaios": "https://www.imaios.com/en/e-anatomy/anatomical-structures/choroid-plexus-of-fourth-ventricle-1553807248",
+    "choroid_plexus_csf_system_pmc": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4629451/",
+    "cerebrospinal_fluid_wikipedia": "https://en.wikipedia.org/wiki/Cerebrospinal_fluid"
+  }
+}

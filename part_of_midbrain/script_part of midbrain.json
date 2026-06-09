@@ -1,0 +1,13 @@
+{
+  "region": "part of midbrain",
+  "hierarchy_level": 3,
+  "parent": "midbrain",
+  "type": "unlateralized/midline midbrain compartment (container node)",
+  "references": {
+    "mesencephalon_statpearls_ncbi": "https://www.ncbi.nlm.nih.gov/books/NBK551509/",
+    "midbrain_wikipedia": "https://en.wikipedia.org/wiki/Midbrain",
+    "midbrain_teachmeanatomy": "https://teachmeanatomy.info/neuroanatomy/brainstem/midbrain/",
+    "midbrain_maladies_radiology": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3366251/",
+    "midbrain_libretexts": "https://med.libretexts.org/Bookshelves/Anatomy_and_Physiology/Anatomy_and_Physiology_(Boundless)/11:_Central_Nervous_System/11.4:_The_Brain_Stem/11.4D:_Midbrain"
+  }
+}

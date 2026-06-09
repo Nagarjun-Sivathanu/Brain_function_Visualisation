@@ -1,0 +1,14 @@
+{
+  "region": "rhombencephalon",
+  "hierarchy_level": 2,
+  "parent": "Brain",
+  "synonyms": ["hindbrain"],
+  "references": {
+    "hindbrain_wikipedia": "https://en.wikipedia.org/wiki/Hindbrain",
+    "rhombencephalon_imaios": "https://www.imaios.com/en/e-anatomy/anatomical-structures/rhombencephalon-hindbrain-133577232",
+    "rhombencephalon_sciencedirect": "https://www.sciencedirect.com/topics/immunology-and-microbiology/rhombencephalon",
+    "hindbrain_newworldencyclopedia": "https://www.newworldencyclopedia.org/entry/Hindbrain",
+    "neural_tube_differentiation_ncbi": "https://www.ncbi.nlm.nih.gov/books/NBK10034/",
+    "metencephalon_wikipedia": "https://en.wikipedia.org/wiki/Metencephalon"
+  }
+}

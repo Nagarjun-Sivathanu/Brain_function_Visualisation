@@ -1,0 +1,14 @@
+{
+  "region": "prosencephalon",
+  "hierarchy_level": 2,
+  "parent": "Brain",
+  "synonyms": ["forebrain"],
+  "references": {
+    "forebrain_britannica": "https://www.britannica.com/science/forebrain",
+    "forebrain_wikipedia": "https://en.wikipedia.org/wiki/Forebrain",
+    "prosencephalon_sciencedirect": "https://www.sciencedirect.com/topics/veterinary-science-and-veterinary-medicine/prosencephalon",
+    "prosencephalon_neuroanatomy_uthealth": "https://nba.uth.tmc.edu/neuroanatomy/L1/Lab01p05_index.html",
+    "major_brain_subdivisions_ncbi": "https://www.ncbi.nlm.nih.gov/books/NBK10954/",
+    "developmental_divisions_physiopedia": "https://www.physio-pedia.com/Brain:_Developmental_Divisions"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "region": "diencephalon",
+  "hierarchy_level": 3,
+  "parent": "prosencephalon",
+  "components": ["thalamus", "hypothalamus", "epithalamus", "subthalamus", "metathalamus"],
+  "references": {
+    "diencephalon_wikipedia": "https://en.wikipedia.org/wiki/Diencephalon",
+    "diencephalon_kenhub": "https://www.kenhub.com/en/library/anatomy/diencephalon",
+    "diencephalon_amboss": "https://www.amboss.com/us/knowledge/diencephalon",
+    "diencephalon_lumen_learning": "https://courses.lumenlearning.com/suny-dutchess-anatomy-physiology/chapter/the-diencephalon-thalamus-hypothalamus-epithalamus/",
+    "diencephalon_functions_libretexts": "https://med.libretexts.org/Bookshelves/Anatomy_and_Physiology/Anatomy_and_Physiology_(Boundless)/11:_Central_Nervous_System/11.6:The_Diencephalon/11.6A:_Functions_of_the_Diencephalon"
+  }
+}

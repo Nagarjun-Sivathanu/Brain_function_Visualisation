@@ -1,0 +1,13 @@
+{
+  "region": "aqueduct",
+  "hierarchy_level": 3,
+  "parent": "midbrain",
+  "synonyms": ["cerebral aqueduct", "aqueduct of Sylvius", "mesencephalic aqueduct", "iter"],
+  "references": {
+    "cerebral_aqueduct_statpearls_ncbi": "https://www.ncbi.nlm.nih.gov/books/NBK540988/",
+    "cerebral_aqueduct_kenhub": "https://www.kenhub.com/en/library/anatomy/cerebral-aqueduct",
+    "cerebral_aqueduct_wikipedia": "https://en.wikipedia.org/wiki/Cerebral_aqueduct",
+    "cerebral_aqueduct_radiopaedia": "https://radiopaedia.org/articles/cerebral-aqueduct-of-sylvius",
+    "cerebral_aqueduct_sciencedirect": "https://www.sciencedirect.com/topics/neuroscience/cerebral-aqueduct"
+  }
+}

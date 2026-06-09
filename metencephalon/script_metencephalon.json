@@ -1,0 +1,13 @@
+{
+  "region": "metencephalon",
+  "hierarchy_level": 3,
+  "parent": "rhombencephalon",
+  "derivatives": ["pons", "cerebellum"],
+  "references": {
+    "metencephalon_wikipedia": "https://en.wikipedia.org/wiki/Metencephalon",
+    "metencephalon_sciencedirect": "https://www.sciencedirect.com/topics/neuroscience/metencephalon",
+    "metencephalon_development_embryologych": "https://embryology.ch/en/organogenesis/nervous-system/brainstem/development-metencephalon/",
+    "metencephalon_imaios": "https://www.imaios.com/en/e-anatomy/anatomical-structures/metencephalon-pons-and-cerebellum-133577392",
+    "metencephalon_umn_lab3": "https://vanat.ahc.umn.edu/neurLab3/metenceph.html"
+  }
+}

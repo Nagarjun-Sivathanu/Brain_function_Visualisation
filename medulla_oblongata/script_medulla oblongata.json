@@ -1,0 +1,14 @@
+{
+  "region": "medulla oblongata",
+  "hierarchy_level": 3,
+  "parent": "rhombencephalon",
+  "developmental_origin": "myelencephalon",
+  "synonyms": ["medulla", "bulb"],
+  "references": {
+    "medulla_statpearls_ncbi": "https://www.ncbi.nlm.nih.gov/books/NBK551589/",
+    "medulla_wikipedia": "https://en.wikipedia.org/wiki/Medulla_oblongata",
+    "medulla_sciencedirect": "https://www.sciencedirect.com/topics/neuroscience/medulla-oblongata",
+    "medulla_kenhub": "https://www.kenhub.com/en/library/anatomy/medulla-oblongata-gross-anatomy",
+    "medulla_clevelandclinic": "https://my.clevelandclinic.org/health/body/23001-medulla-oblongata"
+  }
+}

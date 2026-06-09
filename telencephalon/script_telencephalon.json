@@ -1,0 +1,14 @@
+{
+  "region": "telencephalon",
+  "hierarchy_level": 3,
+  "parent": "prosencephalon",
+  "synonyms": ["cerebrum", "endbrain"],
+  "components": ["cerebral cortex", "basal ganglia", "hippocampus", "amygdala", "lateral ventricles"],
+  "references": {
+    "cerebrum_wikipedia": "https://en.wikipedia.org/wiki/Cerebrum",
+    "telencephalon_sciencedirect": "https://www.sciencedirect.com/topics/medicine-and-dentistry/telencephalon",
+    "cerebral_cortex_basal_ganglia_amboss": "https://www.amboss.com/us/knowledge/the-cerebral-cortex-meninges-basal-ganglia-and-ventricular-system",
+    "brain_anatomy_medscape": "https://emedicine.medscape.com/article/1898830-overview",
+    "telencephalon_atlas_anatomy_schuenke": "https://doctorlib.org/anatomy/atlas-anatomy/14.html"
+  }
+}
