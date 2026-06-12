@@ -1,0 +1,391 @@
+{
+    "1) Brain": {
+        "2) rhombencephalon": {
+            "3) metencephalon": {
+                "4) pons": {},
+                "4) cerebellum": {
+                    "5) left hemisphere of cerebellum": {
+                        "6) lateral hemispheric zone 2": {
+                            "7) left-VIIA crusII-l2": {},
+                            "7) left-VIIA crusI-l2": {}
+                        },
+                        "6) white matter of left hemisphere of cerebellum": {},
+                        "6) left-Dentate-nucleus": {},
+                        "6) medial hemispheric zone": {
+                            "7) left-VIIA crusI-m": {},
+                            "7) left-IX-m": {},
+                            "7) left-III-m": {},
+                            "7) left-V-m": {},
+                            "7) left-VIIA crusII-m": {},
+                            "7) left-VI-m": {},
+                            "7) left-IV-m": {},
+                            "7) left-VIIIB-m": {},
+                            "7) left-VIIB-m": {},
+                            "7) left-VIIIA-m": {}
+                        },
+                        "6) lateral hemispheric zone 1": {
+                            "7) left-VI-l": {},
+                            "7) left-V-l": {},
+                            "7) left-VIIA crusII-l1": {},
+                            "7) left-VIIIB-l": {},
+                            "7) left-VIIB-l": {},
+                            "7) left-VIIA crusI-l1": {},
+                            "7) left-VIIIA-l": {}
+                        },
+                        "6) left-FaGE nuclei": {},
+                        "6) vermis": {
+                            "7) left-VIIIA-v": {},
+                            "7) left-X-v": {},
+                            "7) left-VIIIB-v": {},
+                            "7) left-IV-v": {},
+                            "7) left-VIIB-v": {},
+                            "7) left-V-v": {},
+                            "7) left-VI-v": {},
+                            "7) left-IX-v": {},
+                            "7) left-I II-v": {},
+                            "7) left-III-v": {}
+                        }
+                    },
+                    "5) right hemisphere of cerebellum": {
+                        "6) lateral hemispheric zone 2": {
+                            "7) right-VIIA crusII-l2": {},
+                            "7) right-VIIA crusI-l2": {}
+                        },
+                        "6) white matter of right hemisphere of cerebellum": {},
+                        "6) right-FaGE nuclei": {},
+                        "6) right-Dentate-nucleus": {},
+                        "6) medial hemispheric zone": {
+                            "7) right-IX-m": {},
+                            "7) right-V-m": {},
+                            "7) right-VIIA crusII-m": {},
+                            "7) right-IV-m": {},
+                            "7) right-VIIIB-m": {},
+                            "7) right-VI-m": {},
+                            "7) right-VIIB-m": {},
+                            "7) right-VIIIA-m": {},
+                            "7) right-III-m": {},
+                            "7) right-VIIA crusI-m": {}
+                        },
+                        "6) lateral hemispheric zone 1": {
+                            "7) right-VIIA crusI-l1": {},
+                            "7) right-VI-l": {},
+                            "7) right-V-l": {},
+                            "7) right-VIIA crusII-l1": {},
+                            "7) right-VIIB-l": {},
+                            "7) right-VIIIA-l": {},
+                            "7) right-VIIIB-l": {}
+                        },
+                        "6) vermis": {
+                            "7) right-VIIIB-v": {},
+                            "7) right-III-v": {},
+                            "7) right-X-v": {},
+                            "7) right-VI-v": {},
+                            "7) right-VIIIA-v": {},
+                            "7) right-VIIB-v": {},
+                            "7) right-IX-v": {},
+                            "7) right-I II-v": {},
+                            "7) right-IV-v": {},
+                            "7) right-V-v": {}
+                        }
+                    }
+                }
+            },
+            "3) medulla oblongata": {},
+            "3) fourth ventricle": {}
+        },
+        "2) prosencephalon": {
+            "3) diencephalon": {
+                "4) right optic tract": {},
+                "4) right mammillothalamic tract": {},
+                "4) left mammillothalamic tract": {},
+                "4) epithalamus": {
+                    "5) pineal body": {}
+                },
+                "4) hypothalamus": {
+                    "5) right mammillary body": {},
+                    "5) optic chiasm": {},
+                    "5) neurohypophysis": {
+                        "6) infundibulum of neurohypophysis": {},
+                        "6) neurohypophysis": {},
+                        "6) adenohypophysis": {}
+                    },
+                    "5) left hypothalamus": {
+                        "6) left posterior superior hypothalamus": {},
+                        "6) left subthalamic nucleus": {},
+                        "6) left anterior superior hypothalamus": {},
+                        "6) left anterior inferior hypothalamus": {},
+                        "6) left inferior tuberal hypothalamus": {},
+                        "6) left superior tuberal hypothalamus": {}
+                    },
+                    "5) left mammillary body": {},
+                    "5) right hypothalamus": {
+                        "6) right superior tuberal hypothalamus": {},
+                        "6) right subthalamic nucleus": {},
+                        "6) right anterior superior hypothalamus": {},
+                        "6) right inferior tuberal hypothalamus": {},
+                        "6) right posterior superior hypothalamus": {},
+                        "6) right anterior inferior hypothalamus": {}
+                    }
+                },
+                "4) left optic nerve": {},
+                "4) third ventricle": {},
+                "4) right optic nerve": {},
+                "4) left optic tract": {},
+                "4) thalamus": {
+                    "5) left thalamus": {
+                        "6) left centromedian thalamic nucleus": {},
+                        "6) left dorsomedial thalamic nucleus": {},
+                        "6) left internal medullary lamina": {},
+                        "6) lateral nuclear group": {
+                            "7) left lateral posterior thalamic nucleus": {},
+                            "7) left pulvinar": {},
+                            "7) left lateral dorsal thalamic nucleus": {}
+                        },
+                        "6) ventral nuclear group": {
+                            "7) left ventral posteromedial thalamic nucleus": {},
+                            "7) left ventral posterolateral thalamic nucleus": {},
+                            "7) left ventral lateral thalamic nucleus": {},
+                            "7) left ventral anterior thalamic nucleus": {}
+                        },
+                        "6) left anterior thalamic nucleus": {}
+                    },
+                    "5) right thalamus": {
+                        "6) right dorsomedial thalamic nucleus": {},
+                        "6) right centromedian thalamic nucleus": {},
+                        "6) right anterior thalamic nucleus": {},
+                        "6) right internal medullary lamina": {},
+                        "6) lateral nuclear group": {
+                            "7) right lateral posterior thalamic nucleus": {},
+                            "7) right pulvinar": {},
+                            "7) right lateral dorsal thalamic nucleus": {}
+                        },
+                        "6) ventral nuclear group": {
+                            "7) right ventral posteromedial thalamic nucleus": {},
+                            "7) right ventral anterior thalamic nucleus": {},
+                            "7) right ventral lateral thalamic nucleus": {},
+                            "7) right ventral posterolateral thalamic nucleus": {}
+                        }
+                    },
+                    "5) left metathalamus": {
+                        "6) left medial geniculate body": {},
+                        "6) left lateral geniculate body": {}
+                    },
+                    "5) right metathalamus": {
+                        "6) right medial geniculate body": {},
+                        "6) right lateral geniculate body": {}
+                    }
+                }
+            },
+            "3) telencephalon": {
+                "4) septum of telencephalon": {
+                    "5) pellucid septum": {}
+                },
+                "4) left cerebral hemisphere": {
+                    "5) left insula": {
+                        "6) left insula": {},
+                        "6) left limen insulae": {}
+                    },
+                    "5) subcortex of left cerebral hemisphere": {
+                        "6) left fornix of forebrain": {},
+                        "6) left lentiform nucleus": {
+                            "7) left globus pallidus": {
+                                "8) left globus pallidus pars externa": {},
+                                "8) left globus pallidus pars interna": {}
+                            }
+                        },
+                        "6) striatum of left cerebral hemisphere": {
+                            "7) left nucleus accumbens": {},
+                            "7) left caudate nucleus": {}
+                        },
+                        "6) white matter of left cerebral hemisphere": {}
+                    },
+                    "5) left parietal lobe": {
+                        "6) left superior parietal lobule": {},
+                        "6) left postcentral sulcus": {},
+                        "6) left intraparietal sulcus": {},
+                        "6) left precuneus": {},
+                        "6) left postcentral gyrus": {},
+                        "6) left inferior parietal lobule": {
+                            "7) left supramarginal gyrus": {},
+                            "7) left inferior parietal lobule": {}
+                        }
+                    },
+                    "5) left temporal lobe": {
+                        "6) left superior temporal gyrus (banks of left superior temporal sulcus)": {},
+                        "6) left middle temporal gyrus": {},
+                        "6) left collateral sulcus": {},
+                        "6) left claustrum": {},
+                        "6) left superior temporal gyrus": {},
+                        "6) left transverse temporal gyrus": {},
+                        "6) left fusiform gyrus": {},
+                        "6) left inferior temporal gyrus": {},
+                        "6) left temporal pole": {},
+                        "6) left ambiens gyrus": {}
+                    },
+                    "5) left frontal lobe": {
+                        "6) left inferior frontal gyrus": {
+                            "7) triangular part of left inferior frontal gyrus": {},
+                            "7) opercular part of left inferior frontal gyrus": {},
+                            "7) orbital part of left inferior frontal gyrus": {}
+                        },
+                        "6) left precentral gyrus": {},
+                        "6) left straight gyrus": {},
+                        "6) left middle frontal gyrus": {
+                            "7) anterior part of left middle frontal gyrus": {},
+                            "7) posterior part of left middle frontal gyrus": {}
+                        },
+                        "6) left inferior frontal sulcus": {},
+                        "6) left lateral orbital gyrus": {},
+                        "6) left superior temporal sulcus": {},
+                        "6) left precentral sulcus": {},
+                        "6) left paracentral lobule": {},
+                        "6) left superior frontal gyrus": {},
+                        "6) left central sulcus": {},
+                        "6) left frontal pole": {},
+                        "6) left superior frontal sulcus": {}
+                    },
+                    "5) left limbic lobe": {
+                        "6) left cingulate gyrus": {
+                            "7) left anterior cingulate gyrus": {
+                                "8) caudal part of left anterior cingulate gyrus": {},
+                                "8) rostral part of left anterior cingulate gyrus": {}
+                            },
+                            "7) isthmus of left cingulate gyrus": {},
+                            "7) left posterior cingulate gyrus": {}
+                        },
+                        "6) left hippocampus": {},
+                        "6) left amygdala": {},
+                        "6) left parahippocampal gyrus": {},
+                        "6) left cingulate sulcus": {}
+                    },
+                    "5) left occipital lobe": {
+                        "6) left cuneus": {},
+                        "6) left calcarine sulcus": {},
+                        "6) left visual cortex": {},
+                        "6) left lingual gyrus": {},
+                        "6) left parieto-occipital sulcus": {},
+                        "6) left lateral occipital gyrus": {}
+                    },
+                    "5) left lateral ventricle": {
+                        "6) temporal horn of left lateral ventricle": {},
+                        "6) left lateral ventricle": {}
+                    }
+                },
+                "4) anterior commissure": {},
+                "4) corpus callosum": {},
+                "4) right cerebral hemisphere": {
+                    "5) right parietal lobe": {
+                        "6) right postcentral gyrus": {},
+                        "6) right intraparietal sulcus": {},
+                        "6) right postcentral sulcus": {},
+                        "6) right superior parietal lobule": {},
+                        "6) right precuneus": {},
+                        "6) right inferior parietal lobule": {
+                            "7) right supramarginal gyrus": {},
+                            "7) right inferior parietal lobule": {}
+                        }
+                    },
+                    "5) subcortex of right cerebral hemisphere": {
+                        "6) right fornix of forebrain": {},
+                        "6) right lentiform nucleus": {
+                            "7) right putamen": {},
+                            "7) right globus pallidus": {
+                                "8) right globus pallidus pars externa": {},
+                                "8) right globus pallidus pars interna": {}
+                            }
+                        },
+                        "6) white matter of right cerebral hemisphere": {},
+                        "6) striatum of right cerebral hemisphere": {
+                            "7) right nucleus accumbens": {},
+                            "7) right caudate nucleus": {}
+                        }
+                    },
+                    "5) right claustrum": {},
+                    "5) right temporal lobe": {
+                        "6) right superior temporal gyrus (banks of right superior temporal sulcus)": {},
+                        "6) right middle temporal gyrus": {},
+                        "6) right temporal pole": {},
+                        "6) right superior temporal gyrus": {},
+                        "6) right fusiform gyrus": {},
+                        "6) right superior temporal sulcus": {},
+                        "6) right collateral sulcus": {},
+                        "6) right ambiens gyrus": {},
+                        "6) right transverse temporal gyrus": {},
+                        "6) right inferior temporal gyrus": {}
+                    },
+                    "5) right limbic lobe": {
+                        "6) right hippocampus": {},
+                        "6) right cingulate gyrus": {
+                            "7) right anterior cingulate gyrus": {
+                                "8) caudal part of right anterior cingulate gyrus": {},
+                                "8) rostral part of right anterior cingulate gyrus": {}
+                            },
+                            "7) right posterior cingulate gyrus": {},
+                            "7) isthmus of right cingulate gyrus": {}
+                        },
+                        "6) right cingulate sulcus": {},
+                        "6) right parahippocampal gyrus": {},
+                        "6) right amygdala": {}
+                    },
+                    "5) right insula": {
+                        "6) right insula": {},
+                        "6) right limen insulae": {}
+                    },
+                    "5) right lateral ventricle": {
+                        "6) temporal horn of right lateral ventricle": {},
+                        "6) right lateral ventricle": {}
+                    },
+                    "5) right frontal lobe": {
+                        "6) right precentral gyrus": {},
+                        "6) right middle frontal gyrus": {
+                            "7) anterior part of right middle frontal gyrus": {},
+                            "7) posterior part of right middle frontal gyrus": {}
+                        },
+                        "6) right inferior frontal sulcus": {},
+                        "6) right straight gyrus": {},
+                        "6) right paracentral lobule": {},
+                        "6) right frontal pole": {},
+                        "6) right precentral sulcus": {},
+                        "6) right inferior frontal gyrus": {
+                            "7) triangular part of right inferior frontal gyrus": {},
+                            "7) orbital part of right inferior frontal gyrus": {},
+                            "7) opercular part of right inferior frontal gyrus": {}
+                        },
+                        "6) right central sulcus": {},
+                        "6) right lateral orbital gyrus": {},
+                        "6) right superior frontal gyrus": {},
+                        "6) right superior frontal sulcus": {}
+                    },
+                    "5) right occipital lobe": {
+                        "6) right lingual gyrus": {},
+                        "6) right lateral occipital gyrus": {},
+                        "6) right calcarine sulcus": {},
+                        "6) right parieto-occipital sulcus": {},
+                        "6) right cuneus": {},
+                        "6) right visual cortex": {}
+                    }
+                }
+            }
+        },
+        "2) midbrain": {
+            "3) part of midbrain": {},
+            "3) right side of midbrain": {
+                "4) right substantia nigra": {},
+                "4) brachia of right inferior colliculus": {},
+                "4) right red nucleus": {},
+                "4) brachia of right superior colliculus": {},
+                "4) right inferior colliculus": {},
+                "4) right superior colliculus": {}
+            },
+            "3) left side of midbrain": {
+                "4) left inferior colliculus": {},
+                "4) left superior colliculus": {},
+                "4) left red nucleus": {},
+                "4) left substantia nigra": {},
+                "4) brachia of left inferior colliculus": {},
+                "4) brachia of left superior colliculus": {}
+            },
+            "3) aqueduct": {}
+        }
+    }
+}
