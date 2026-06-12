@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brain Function Visualisation</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">◉</span>
+      <span class="title">Brain Function Visualisation</span>
+    </div>
+
+    <div class="mode-switch" id="modeSwitch">
+      <button class="mode-btn active" data-mode="broadcast">Broadcast</button>
+      <button class="mode-btn" data-mode="hierarchy">Hierarchy</button>
+    </div>
+
+    <div class="topbar-actions">
+      <button class="ghost-btn" id="toggleSidebar" title="Show/hide regions panel">⬓ Regions</button>
+      <button class="ghost-btn" id="toggleTerminal" title="Show/hide terminal log">▤ Terminal</button>
+    </div>
+  </header>
+
+  <main class="layout" id="layout">
+    <!-- LEFT: region visualisation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="panel-head">
+        <span id="sidebarTitle">Active Regions</span>
+        <span class="legend" id="legend"></span>
+      </div>
+      <div class="sidebar-body" id="sidebarBody">
+        <div class="empty-hint">Ask something to see which brain regions activate.</div>
+      </div>
+    </aside>
+
+    <div class="resizer" id="resizer"></div>
+
+    <!-- RIGHT: chat + terminal -->
+    <section class="chat-col">
+      <div class="chat-area" id="chatArea">
+        <div class="welcome">
+          <h1>What should the brain reason about?</h1>
+          <p>Every query is processed by a network of brain-region agents.
+             Switch between <strong>Broadcast</strong> (all regions evaluate in parallel)
+             and <strong>Hierarchy</strong> (the query routes top-down from the Brain root).</p>
+          <div class="examples" id="examples">
+            <button>You see a lion and feel afraid</button>
+            <button>A ball comes toward you and someone shouts "catch!"</button>
+            <button>What is 3 + 11?</button>
+            <button>You recognize a friend's face in a crowd</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="terminal" id="terminal">
+        <div class="terminal-head">
+          <span>network activity</span>
+          <button class="ghost-btn small" id="clearTerminal">clear</button>
+        </div>
+        <pre class="terminal-body" id="terminalBody"></pre>
+      </div>
+
+      <form class="composer" id="composer">
+        <input id="queryInput" type="text" autocomplete="off"
+               placeholder="Ask the brain network…" />
+        <button type="submit" id="sendBtn">Send</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

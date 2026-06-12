@@ -1,0 +1,7 @@
+I want to test and create a a way to show case this neater than the cli .So lets create a front end type website where we can see the reasoning and the regions it is calling so i am thinking of : 
+1) A minimalistic website which has mode switching 
+2) The webiste should be  split in two one side  a small / moderate side bar which shows the regions which are called have them colour coded and have them show thier brightness and activation based on the confidance and if it is activated . This one is for normal brodacast mode but if activated in hirearchial mdoe it should have a hireachical call like a line or something to indicate the upper one was called then the bellow one is called and so one have it show that like first A activated then From a a line to show what it activated and so on 
+3) Have the chat area show now what we have in the terminal there but allow for the two sides to be resized or hidden by the user .
+4) The chat area should have a option to change between brodcast mode and hierachy based mode .
+5) Have the call to the region be only be via json files as in the end i need it to be a json call for the real front end which will have its own animations and such 
+And if u have any doubts or ideas u can also ask and get them cleared 
