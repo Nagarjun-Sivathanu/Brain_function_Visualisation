@@ -15,8 +15,9 @@ def parallel_eval_node(state: BrainState) -> BrainState:
     results = asyncio.run(run_all())
 
     region_votes = {}
-    for vote in results:
-        region_votes[vote["region"]] = vote
+    for agent, vote in zip(ALL_AGENTS.values(), results):
+        vote["region"] = agent.display_name  # force canonical name regardless of LLM output
+        region_votes[agent.display_name] = vote
 
     active_count = sum(1 for v in region_votes.values() if v.get("involved"))
     print(f"  {active_count} regions self-reported as involved.\n")
