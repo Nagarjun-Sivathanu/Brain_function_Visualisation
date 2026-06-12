@@ -12,26 +12,22 @@ LLM_PARAMS = {
 CONFIDENCE_THRESHOLD = 0.6
 
 # Each entry: folder_name -> {display_name, file_prefix, parent_display_name or None}
+# Brain (root) excluded from broadcast — level-2 divisions are the top of the hierarchy here.
 REGION_REGISTRY = {
-    "Brain": {
-        "display_name": "Brain",
-        "file_prefix": "Brain",
-        "parent": None,
-    },
     "prosencephalon": {
         "display_name": "Prosencephalon",
         "file_prefix": "prosencephalon",
-        "parent": "Brain",
+        "parent": None,
     },
     "midbrain": {
         "display_name": "Midbrain",
         "file_prefix": "midbrain",
-        "parent": "Brain",
+        "parent": None,
     },
     "rhombencephalon": {
         "display_name": "Rhombencephalon",
         "file_prefix": "rhombencephalon",
-        "parent": "Brain",
+        "parent": None,
     },
     "diencephalon": {
         "display_name": "Diencephalon",
