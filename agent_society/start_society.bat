@@ -24,11 +24,18 @@ if not exist "frontend\node_modules" (
   popd
 )
 
+REM ── Free port 8000 if something else (e.g. another app) is holding it ───────
+for /f "tokens=5" %%P in ('netstat -ano ^| findstr ":8000 " ^| findstr LISTENING') do (
+  echo [setup] port 8000 in use by PID %%P — stopping it
+  taskkill /F /PID %%P >nul 2>&1
+)
+
 echo [run] starting backend on http://127.0.0.1:8000
-start "society-backend" cmd /c "cd /d "%~dp0backend" && .venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000"
+REM `cmd /k` keeps the window open if the backend errors, so you can read why.
+start "society-backend" cmd /k "cd /d "%~dp0backend" && .venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000"
 
 echo [run] starting frontend on http://localhost:3000
-start "society-frontend" cmd /c "cd /d "%~dp0frontend" && npm run dev"
+start "society-frontend" cmd /k "cd /d "%~dp0frontend" && npm run dev"
 
 REM give the dev server a moment, then open the browser
 timeout /t 6 /nobreak >nul
