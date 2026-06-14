@@ -13,6 +13,7 @@ authored file fall back to a generic prompt built from the name + tree path.
 """
 import json
 import asyncio
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 
 from brain_system.config import get_llm_client, LLM_MODEL, LLM_PARAMS
@@ -20,22 +21,30 @@ from brain_system.region_loader import load_region_content
 
 _executor = ThreadPoolExecutor(max_workers=16)
 
-# Normalized clean name -> (folder, file_prefix) for the 13 authored regions.
-KNOWN_REGIONS = {
-    "brain": ("Brain", "Brain"),
-    "prosencephalon": ("prosencephalon", "prosencephalon"),
-    "midbrain": ("midbrain", "midbrain"),
-    "rhombencephalon": ("rhombencephalon", "rhombencephalon"),
-    "diencephalon": ("diencephalon", "diencephalon"),
-    "telencephalon": ("telencephalon", "telencephalon"),
-    "metencephalon": ("metencephalon", "metencephalon"),
-    "medulla oblongata": ("medulla_oblongata", "medulla oblongata"),
-    "fourth ventricle": ("fourth_ventricle", "fourth ventricle"),
-    "part of midbrain": ("part_of_midbrain", "part of midbrain"),
-    "right side of midbrain": ("right_side_of_midbrain", "right side of midbrain"),
-    "left side of midbrain": ("left_side_of_midbrain", "left side of midbrain"),
-    "aqueduct": ("aqueduct", "aqueduct"),
-}
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _discover_regions() -> dict:
+    """Normalized clean name -> (folder, file_prefix), discovered by scanning the
+    repo for any folder containing a *_summary.md. Drop in a region folder and
+    the hierarchy model finds it automatically — no hardcoded list."""
+    out: dict[str, tuple[str, str]] = {}
+    for entry in _REPO_ROOT.iterdir():
+        if not entry.is_dir():
+            continue
+        try:
+            summaries = [f.name for f in entry.iterdir() if f.name.endswith("_summary.md")]
+        except OSError:
+            continue
+        if not summaries:
+            continue
+        prefix = summaries[0][: -len("_summary.md")]
+        out[entry.name.lower().replace("_", " ")] = (entry.name, prefix)
+    return out
+
+
+# Normalized clean name -> (folder, file_prefix) for every authored region.
+KNOWN_REGIONS = _discover_regions()
 
 ROUTE_SCHEMA = """{
   "decisions": [

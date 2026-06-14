@@ -28,8 +28,13 @@ from app import brain_ontology as onto
 log = logging.getLogger("brain_meeting")
 
 CONF_THRESHOLD = 0.55
-MAX_RECRUITS = 10
+MAX_RECRUITS = 10  # baseline cap; deeper meetings get more headroom (see below)
 _AGENT_BY_ID = {a["id"]: a for a in AGENT_DEFINITIONS}
+
+
+def _recruit_cap(max_level: int) -> int:
+    """Deeper meetings recruit more regions (so the cascade can reach L4/L5)."""
+    return min(8 + 3 * max(0, max_level - 2), 18)
 
 
 # ── event emitter (queue + persistence + timeline metadata) ─────────────────
@@ -119,6 +124,7 @@ async def run_brain_meeting(
     # Prior session memory (the hippocampus group) injected into every prompt so
     # regions can refer back to earlier questions in the same conversation.
     mem = f"Earlier in this session (hippocampus memory):\n{group_context}\n\n" if group_context else ""
+    cap = _recruit_cap(max_level)
 
     async def stream_region(region_id: str, stage: str, system: str, user: str) -> str:
         await em.emit("agent_start", agent_id=region_id, stage=stage)
@@ -145,44 +151,54 @@ async def run_brain_meeting(
         for i, d in enumerate(divisions):
             await em.emit("seat", agent_id=d, room="meeting", seat="main", index=i)
 
-        # ── 2. Self-assessment: which sub-regions are involved? ──────────────
-        recruited: dict[str, str] = {}     # region_id -> caller_id
-        recruit_conf: dict[str, float] = {}
-        for d in divisions:
-            kids = [k for k in onto.children(d) if onto.level_of(k) <= max_level]
-            kid_names = [onto.display_name(k) for k in kids] or ["(none)"]
+        # ── 2+3. Top-down cascade: assess children and recruit involved ones,
+        #         descending the hierarchy until max_level (BFS). A region only
+        #         assesses its children once it is itself present in the room.
+        async def assess_children(parent: str) -> list[dict]:
+            kids = [k for k in onto.children(parent)
+                    if k in _AGENT_BY_ID and onto.level_of(k) <= max_level]
+            if not kids:
+                return []
+            kid_names = [onto.display_name(k) for k in kids]
             schema = ('{"assessments":[{"region":"<name>","involved":true|false,'
                       '"confidence":0.0-1.0,"reason":"short biological reason"}]}')
             user = (f"{mem}Scenario: {scenario}\n\nYour candidate sub-regions:\n"
                     + "\n".join(f"- {n}" for n in kid_names)
                     + f"\n\nWhich are involved in this scenario? Reply ONLY JSON:\n{schema}")
-            await em.emit("agent_start", agent_id=d, stage="assessment")
-            raw = await call_agent_once(_agent(d)["model"], 0.2, _sys(d), [{"role": "user", "content": user}], max_tokens=600)
-            await em.emit("agent_end", agent_id=d)
-            data = _parse_json(raw)
+            await em.emit("agent_start", agent_id=parent, stage="assessment")
+            raw = await call_agent_once(_agent(parent)["model"], 0.2, _sys(parent), [{"role": "user", "content": user}], max_tokens=600)
+            await em.emit("agent_end", agent_id=parent)
             picks = []
-            for a in data.get("assessments", []):
+            valid = set(kids)
+            for a in _parse_json(raw).get("assessments", []):
                 rid = onto.to_id(str(a.get("region", "")))
-                conf = float(a.get("confidence", 0.0) or 0.0)
-                involved = bool(a.get("involved", False))
-                if rid in onto.children(d):
-                    picks.append({"region": rid, "confidence": round(conf, 2), "involved": involved, "reason": a.get("reason", "")})
-                    if involved and conf >= CONF_THRESHOLD and rid in _AGENT_BY_ID and rid not in recruited:
-                        recruited[rid] = d
-                        recruit_conf[rid] = conf
-            await em.emit("assess", agent_id=d, picks=picks)
+                if rid in valid:
+                    picks.append({"region": rid, "confidence": round(float(a.get("confidence", 0.0) or 0.0), 2),
+                                  "involved": bool(a.get("involved", False)), "reason": a.get("reason", "")})
+            await em.emit("assess", agent_id=parent, picks=picks)
+            return picks
 
-        # ── 3. Recruit the needed regions one-by-one ─────────────────────────
         await em.emit("stage_change", stage="recruitment")
-        order = sorted(recruited, key=lambda r: -recruit_conf.get(r, 0.0))[:MAX_RECRUITS]
-        for rid in order:
-            caller = recruited[rid]
-            reason = f"{onto.display_name(caller)} flagged {onto.display_name(rid)} as involved (conf {recruit_conf[rid]:.2f})"
-            await em.emit("summon", agent_id=rid, caller_id=caller, reason=reason)
-            await em.emit("move", agent_id=rid, room="meeting")
-            await asyncio.sleep(0.4)  # let the sprite walk in, one at a time
+        present: set[str] = set(divisions)
+        active: list[str] = []
+        to_assess: list[str] = list(divisions)
+        while to_assess and len(active) < cap:
+            parent = to_assess.pop(0)
+            for pick in await assess_children(parent):
+                if not pick["involved"] or pick["confidence"] < CONF_THRESHOLD:
+                    continue
+                rid = pick["region"]
+                if rid in present or len(active) >= cap:
+                    continue
+                reason = f"{onto.display_name(parent)} flagged {onto.display_name(rid)} as involved (conf {pick['confidence']:.2f})"
+                await em.emit("summon", agent_id=rid, caller_id=parent, reason=reason)
+                await em.emit("move", agent_id=rid, room="meeting")
+                present.add(rid)
+                active.append(rid)
+                if onto.level_of(rid) < max_level:
+                    to_assess.append(rid)  # this region will assess its own children
+                await asyncio.sleep(0.35)
 
-        active = list(order)
         if not active:
             # Nothing crossed threshold — let the divisions themselves act.
             active = list(divisions)
@@ -218,7 +234,7 @@ async def run_brain_meeting(
                     continue
                 await em.emit("edge", **{"from": rid, "to": tid, "kind": kind, "note": t.get("note", "")})
                 # Recruit a triggered region if it's a real agent and not yet present.
-                if tid in _AGENT_BY_ID and tid not in active and len(active) < MAX_RECRUITS:
+                if tid in _AGENT_BY_ID and tid not in active and len(active) < cap and onto.level_of(tid) <= max_level:
                     await em.emit("summon", agent_id=tid, caller_id=rid, reason=f"{onto.display_name(rid)} triggers {onto.display_name(tid)} ({kind})")
                     await em.emit("move", agent_id=tid, room="meeting")
                     active.append(tid)

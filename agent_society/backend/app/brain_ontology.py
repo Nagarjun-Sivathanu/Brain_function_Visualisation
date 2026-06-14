@@ -83,6 +83,36 @@ def display_name(region_id: str) -> str:
     return region_id.replace("_", " ")
 
 
+_all_cache = None
+
+
+def all_regions() -> list[dict]:
+    """Every node in the ontology as {id, name, level, parent_id}."""
+    global _all_cache
+    if _all_cache is not None:
+        return _all_cache
+    out: list[dict] = []
+
+    def walk(subtree: dict, level: int, parent_id: str | None):
+        for key, child in subtree.items():
+            nm = strip_prefix(key)
+            rid = to_id(nm)
+            out.append({"id": rid, "name": nm, "level": level, "parent_id": parent_id})
+            if isinstance(child, dict) and child:
+                walk(child, level + 1, rid)
+
+    walk(load_tree(), 1, None)
+    _all_cache = out
+    return out
+
+
+def region_paths(region_id: str) -> tuple[str, str]:
+    """(folder, file_prefix) for a region: folder uses underscores, prefix keeps
+    spaces — matching the authored files (medulla_oblongata/ + 'medulla oblongata')."""
+    name = display_name(region_id)
+    return name.replace(" ", "_"), name
+
+
 # ── atlas-derived candidate connections (for seeding interaction edges) ──────
 _atlas_cache = None
 

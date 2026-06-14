@@ -61,7 +61,10 @@ def _fake_once(messages: list[dict]) -> str:
     if '"assessments"' in u:
         names = [l[2:].strip() for l in lines if l.strip().startswith("- ")]
         names = [n for n in names if n and n != "(none)"]
-        picks = [{"region": n, "involved": True, "confidence": 0.8, "reason": "demo-mode involvement"} for n in names]
+        # Selective (only the first 1-2) so the recruitment cascade goes DEEP
+        # rather than recruiting every child at one level.
+        picks = [{"region": n, "involved": i < 2, "confidence": 0.8 if i < 2 else 0.2,
+                  "reason": "demo-mode involvement"} for i, n in enumerate(names)]
         return json.dumps({"assessments": picks})
     if '"triggers"' in u:
         cands = []

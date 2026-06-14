@@ -19,22 +19,32 @@ REGION_ROOT = Path(os.getenv("BRAIN_REGION_ROOT", str(_DEFAULT_ROOT)))
 # the configured endpoint. Kept in the schema for UI display.
 LLM_LABEL = os.getenv("LLM_MODEL", "Llama-3.3-70B-Instruct")
 
-# id → (folder, file_prefix) for loading the authored prompt/summary files.
-REGION_FILES = {
-    "brain": ("Brain", "Brain"),
-    "prosencephalon": ("prosencephalon", "prosencephalon"),
-    "midbrain": ("midbrain", "midbrain"),
-    "rhombencephalon": ("rhombencephalon", "rhombencephalon"),
-    "diencephalon": ("diencephalon", "diencephalon"),
-    "telencephalon": ("telencephalon", "telencephalon"),
-    "metencephalon": ("metencephalon", "metencephalon"),
-    "medulla_oblongata": ("medulla_oblongata", "medulla oblongata"),
-    "fourth_ventricle": ("fourth_ventricle", "fourth ventricle"),
-    "part_of_midbrain": ("part_of_midbrain", "part of midbrain"),
-    "right_side_of_midbrain": ("right_side_of_midbrain", "right side of midbrain"),
-    "left_side_of_midbrain": ("left_side_of_midbrain", "left side of midbrain"),
-    "aqueduct": ("aqueduct", "aqueduct"),
-}
+from app import brain_ontology as _onto  # noqa: E402
+
+
+def _discover_folders() -> dict:
+    """Scan the repo root for region folders (any dir with a *_summary.md) and
+    map region id -> (folder_name, file_prefix). This is the auto-discovery: drop
+    in a region folder and it becomes an agent — no hardcoded list."""
+    found: dict[str, tuple[str, str]] = {}
+    if not REGION_ROOT.exists():
+        return found
+    for entry in REGION_ROOT.iterdir():
+        if not entry.is_dir():
+            continue
+        try:
+            summaries = [f.name for f in entry.iterdir() if f.name.endswith("_summary.md")]
+        except OSError:
+            continue
+        if not summaries:
+            continue
+        prefix = summaries[0][: -len("_summary.md")]
+        found[entry.name.lower()] = (entry.name, prefix)  # folder "Brain" -> id "brain"
+    return found
+
+
+# id → (folder, file_prefix), discovered from disk.
+REGION_FILES = _discover_folders()
 
 
 def _load_region_text(agent_id: str) -> dict:
@@ -50,9 +60,9 @@ def _load_region_text(agent_id: str) -> dict:
     return {"agent_prompt": agent_prompt, "summary": summary}
 
 
-# personality_traits / expertise are short functional descriptors used in the
-# system-prompt header; the real depth comes from the authored region files.
-AGENT_DEFINITIONS = [
+# Curated metadata (role/emoji/colour/temperature/keywords) for the original
+# high-level regions; every other discovered region is auto-styled.
+_CURATED_LIST = [
     {
         "id": "brain",
         "name": "Brain",
@@ -159,13 +169,70 @@ AGENT_DEFINITIONS = [
     },
 ]
 
-# All agents run on one shared model (no per-agent provider routing here).
-from app import brain_ontology as _onto  # noqa: E402
+# ── Build the full roster from discovered folders + the ontology ────────────
+_CURATED = {a["id"]: a for a in _CURATED_LIST}
+# Keep the SHALLOWEST occurrence (some names repeat as their own child in the
+# ontology, e.g. neurohypophysis / insula / lateral ventricle).
+_NODE_BY_ID: dict = {}
+for _n in _onto.all_regions():
+    _NODE_BY_ID.setdefault(_n["id"], _n)
+_DIV_COLOR = {"prosencephalon": "#6366f1", "midbrain": "#f59e0b",
+              "rhombencephalon": "#10b981", "brain": "#e5e7eb"}
+_AUTO_EMOJI = ["🧠", "🔮", "⚡", "🧩", "🌀", "✨", "🔷", "🟣", "🟢", "🟡",
+               "🔵", "🟠", "🫧", "🧬", "🎯", "🩻", "🔶", "💠"]
+_SMALL = {"of", "the", "and", "in", "to", "a"}
 
-for _a in AGENT_DEFINITIONS:
-    _a["model"] = LLM_LABEL
-    _a["fallback_model"] = None
-    _a["level"] = _onto.level_of(_a["id"])  # ontology depth, for UI depth filtering
+
+def _title(s: str) -> str:
+    return " ".join(w if w in _SMALL else w[:1].upper() + w[1:] for w in s.split())
+
+
+def _hash(s: str) -> int:
+    h = 0
+    for c in s:
+        h = (h * 31 + ord(c)) & 0xFFFFFFFF
+    return h
+
+
+def _root_division(rid: str):
+    cur = rid
+    for _ in range(12):
+        n = _NODE_BY_ID.get(cur)
+        if not n:
+            return None
+        if n["level"] == 2:
+            return n["id"]
+        if n["level"] <= 1:
+            return "brain"
+        cur = n["parent_id"]
+    return None
+
+
+def _build_agents() -> list[dict]:
+    defs = []
+    for rid, (_folder, prefix) in sorted(REGION_FILES.items()):
+        node = _NODE_BY_ID.get(rid)
+        level = node["level"] if node else _onto.level_of(rid)
+        parent = node["parent_id"] if node else None
+        cur = _CURATED.get(rid, {})
+        defs.append({
+            "id": rid,
+            "name": cur.get("name") or _title(node["name"] if node else prefix.replace("_", " ")),
+            "role": cur.get("role") or (f"{_title(_onto.display_name(parent))} sub-region" if parent else "Brain region"),
+            "emoji": cur.get("emoji") or _AUTO_EMOJI[_hash(rid) % len(_AUTO_EMOJI)],
+            "color": cur.get("color") or _DIV_COLOR.get(_root_division(rid), "#9ca3af"),
+            "temperature": cur.get("temperature", 0.4),
+            "personality_traits": cur.get("personality_traits", []),
+            "expertise": cur.get("expertise", []),
+            "model": LLM_LABEL,
+            "fallback_model": None,
+            "level": level,
+            "parent": parent,
+        })
+    return defs
+
+
+AGENT_DEFINITIONS = _build_agents()
 
 
 SPECIFICITY_DIRECTIVE = (
