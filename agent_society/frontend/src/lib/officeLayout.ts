@@ -315,13 +315,14 @@ export function mainSeat(i: number): { lx: number; ly: number } {
   return MAIN_SEATS[i] ?? { lx: 50, ly: 12 };
 }
 
-/** Ring of seats hugging the central conference table. */
+/** Ring of seats hugging the central conference table (wide ellipse to match
+ *  the wide table in a wide room). */
 export function summonSeat(i: number, n: number): { lx: number; ly: number } {
-  if (n <= 0) return { lx: 50, ly: 53 };
+  if (n <= 0) return { lx: 50, ly: 52 };
   const angle = -Math.PI / 2 + (i / n) * Math.PI * 2;
   return {
-    lx: clamp(50 + 27 * Math.cos(angle), 10, 90),
-    ly: clamp(53 + 26 * Math.sin(angle), 26, 90),
+    lx: clamp(50 + 19 * Math.cos(angle), 12, 88),
+    ly: clamp(52 + 16 * Math.sin(angle), 30, 86),
   };
 }
 
@@ -361,6 +362,21 @@ export const WANDER_ZONES: Record<RoomId, Array<{ lx: number; ly: number }>> = {
     { lx: 44, ly: 58 }, { lx: 56, ly: 72 }, { lx: 48, ly: 88 },
   ],
 };
+
+/** Which room contains an absolute office %-point (or null). */
+export function roomAtOffice(x: number, y: number): RoomId | null {
+  for (const r of Object.values(ROOMS)) {
+    const b = r.bounds;
+    if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) return r.id;
+  }
+  return null;
+}
+
+/** Convert an absolute office %-point to room-local % (0–100). */
+export function officeToLocal(room: RoomId, x: number, y: number): { lx: number; ly: number } {
+  const b = ROOMS[room].bounds;
+  return { lx: ((x - b.x) / b.w) * 100, ly: ((y - b.y) / b.h) * 100 };
+}
 
 export function pickWanderSpot(currentRoom: RoomId): { room: RoomId; lx: number; ly: number } {
   // Idle agents only mill around within the waiting room.

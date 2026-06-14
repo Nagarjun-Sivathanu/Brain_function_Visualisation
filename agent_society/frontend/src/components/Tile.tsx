@@ -25,13 +25,15 @@ export function useAtlasReady(): boolean {
  *  rendered at the shared PIXEL_SCALE so it matches the character sprites.
  *  Positioned (centered) at room-local lx/ly %. */
 export function Tile({
-  col, row, w, h, lx, ly, z = 5, mul = 1,
+  col, row, w, h, lx, ly, z = 5, mul = 1, interactive, selected, onPointerDown,
 }: {
   col: number; row: number; w: number; h: number; lx: number; ly: number; z?: number; mul?: number;
+  interactive?: boolean; selected?: boolean; onPointerDown?: (e: React.PointerEvent) => void;
 }) {
   const s = PIXEL_SCALE * mul;
   return (
     <div
+      onPointerDown={onPointerDown}
       className="absolute"
       style={{
         left: `${lx}%`, top: `${ly}%`,
@@ -42,8 +44,12 @@ export function Tile({
         backgroundSize: `${ATLAS_W * s}px ${ATLAS_H * s}px`,
         backgroundPosition: `${-col * 16 * s}px ${-row * 16 * s}px`,
         imageRendering: "pixelated",
-        zIndex: z,
+        zIndex: selected ? 19 : z,
         filter: "drop-shadow(0 3px 2px rgba(8,12,22,0.4))",
+        pointerEvents: interactive ? "auto" : "none",
+        cursor: interactive ? "move" : undefined,
+        outline: selected ? "2px dashed #fbbf24" : undefined,
+        outlineOffset: 2,
       }}
     />
   );
