@@ -2,6 +2,7 @@
 
 import { useAgentStore } from "@/lib/agentStore";
 import { useMeetingStore } from "@/lib/meetingStore";
+import { useUiStore } from "@/lib/uiStore";
 import { ROOMS, type RoomId } from "@/lib/officeLayout";
 
 const EDGE_COLOR: Record<string, string> = {
@@ -21,6 +22,9 @@ function toOffice(room: RoomId, lx: number, ly: number) {
 export function Connectome() {
   const positions = useAgentStore((s) => s.positions);
   const edges = useMeetingStore((s) => s.view.edges);
+  const showLinks = useUiStore((s) => s.showLinks);
+
+  if (!showLinks) return null;
 
   // Only draw an interaction edge when BOTH regions are currently seated in the
   // meeting room — otherwise edges to waiting/implementation regions sprawl

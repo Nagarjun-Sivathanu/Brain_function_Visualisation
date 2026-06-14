@@ -315,14 +315,20 @@ export function mainSeat(i: number): { lx: number; ly: number } {
   return MAIN_SEATS[i] ?? { lx: 50, ly: 12 };
 }
 
-/** Ring of seats hugging the central conference table (wide ellipse to match
- *  the wide table in a wide room). */
+/** Seats around the central table. Overflow past one ring spills onto larger
+ *  concentric rings so many recruited regions still each get their own spot. */
+const PER_RING = 12;
 export function summonSeat(i: number, n: number): { lx: number; ly: number } {
   if (n <= 0) return { lx: 50, ly: 52 };
-  const angle = -Math.PI / 2 + (i / n) * Math.PI * 2;
+  const ring = Math.floor(i / PER_RING);
+  const inRing = i % PER_RING;
+  const ringCount = Math.min(PER_RING, Math.max(1, n - ring * PER_RING));
+  const rx = 19 + ring * 12;
+  const ry = 15 + ring * 11;
+  const angle = -Math.PI / 2 + (inRing / ringCount) * Math.PI * 2;
   return {
-    lx: clamp(50 + 19 * Math.cos(angle), 12, 88),
-    ly: clamp(52 + 16 * Math.sin(angle), 30, 86),
+    lx: clamp(50 + rx * Math.cos(angle), 7, 93),
+    ly: clamp(52 + ry * Math.sin(angle), 22, 92),
   };
 }
 

@@ -9,6 +9,8 @@ import { useUiStore } from "@/lib/uiStore";
 export function ControlBar() {
   const leftView = useUiStore((s) => s.leftView);
   const setLeftView = useUiStore((s) => s.setLeftView);
+  const showLinks = useUiStore((s) => s.showLinks);
+  const setShowLinks = useUiStore((s) => s.setShowLinks);
 
   const events = useMeetingStore((s) => s.events);
   const cursor = useMeetingStore((s) => s.cursor);
@@ -51,6 +53,11 @@ export function ControlBar() {
           onClick={() => setLeftView("terminal")}
           className={`px-3 py-1 rounded-full font-semibold ${leftView === "terminal" ? "bg-sky-500 text-black" : "text-slate-300"}`}
         >Terminal</button>
+        <button
+          onClick={() => setShowLinks(!showLinks)}
+          title="Show/hide the interaction edges between regions"
+          className={`px-3 py-1 rounded-full font-semibold ${showLinks ? "bg-fuchsia-500 text-black" : "text-slate-400"}`}
+        >Links</button>
       </div>
 
       {total > 0 && (
