@@ -44,12 +44,17 @@ function layoutRoom(members: string[], room: RoomId, positions: Record<string, A
 function initialState(agents: Agent[]) {
   registerAgentOrder(agents.map((a) => a.id));
   const roomMembers = EMPTY_ROOMS();
-  roomMembers.waiting = agents.map((a) => a.id);
+  // The level-2 divisions live in the meeting room (seated at their table) from
+  // the start; everyone else waits in the corridor until summoned.
+  for (const a of agents) {
+    (a.level === 2 ? roomMembers.meeting : roomMembers.waiting).push(a.id);
+  }
   const positions: Record<string, AgentPosition> = {};
+  layoutRoom(roomMembers.meeting, "meeting", positions);
   layoutRoom(roomMembers.waiting, "waiting", positions);
   return {
     agents,
-    statuses: Object.fromEntries(agents.map((a) => [a.id, "idle" as AgentStatus])),
+    statuses: Object.fromEntries(agents.map((a) => [a.id, (a.level === 2 ? "meeting" : "idle") as AgentStatus])),
     positions,
     walking: Object.fromEntries(agents.map((a) => [a.id, false])),
     roomMembers,

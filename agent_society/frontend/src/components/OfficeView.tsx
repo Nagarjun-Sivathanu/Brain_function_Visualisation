@@ -8,12 +8,13 @@ import { Tile, useAtlasReady } from "@/components/Tile";
 import { EditPanel } from "@/components/EditPanel";
 import { useEditStore } from "@/lib/editStore";
 import { PIECE_BY_KEY } from "@/lib/furnitureCatalog";
-import { ROOMS, roomAtOffice, officeToLocal, type Room, type RoomId } from "@/lib/officeLayout";
+import { ROOMS, roomAtOffice, officeToLocal, summonSeat, implSeat, type Room, type RoomId } from "@/lib/officeLayout";
 import { Plant, Sofa, Rug, ConfTable, Chair, Screen, Podium } from "@/components/Furniture";
 
 export function OfficeView() {
   const agents = useAgentStore((s) => s.agents);
   const positions = useAgentStore((s) => s.positions);
+  const roomMembers = useAgentStore((s) => s.roomMembers);
   const selectAgent = useAgentStore((s) => s.selectAgent);
   const atlasReady = useAtlasReady();
 
@@ -84,6 +85,25 @@ export function OfficeView() {
               </div>
             ))
           : (Object.values(ROOMS) as Room[]).map((room) => <ProceduralFurniture key={`pf-${room.id}`} room={room} />)}
+
+        {/* A chair under every seated region (meeting + implementation) — placed
+            at the same seats the agents use, so it scales with how many arrive. */}
+        {atlasReady && (Object.values(ROOMS) as Room[]).map((room) => {
+          if (room.id === "waiting") return null;
+          const count = (roomMembers[room.id] || []).length;
+          if (count === 0) return null;
+          const chair = PIECE_BY_KEY.chairBrown;
+          const b = room.bounds;
+          return (
+            <div key={`seats-${room.id}`} className="absolute pointer-events-none"
+              style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, height: `${b.h}%`, zIndex: 4 }}>
+              {Array.from({ length: count }).map((_, i) => {
+                const c = room.id === "meeting" ? summonSeat(i, Math.max(6, count)) : implSeat(i, Math.max(2, count));
+                return <Tile key={i} col={chair.col} row={chair.row} w={chair.w} h={chair.h} lx={c.lx} ly={c.ly + 3} z={4} />;
+              })}
+            </div>
+          );
+        })}
 
         <Connectome />
 

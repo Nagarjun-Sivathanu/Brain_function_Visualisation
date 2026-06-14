@@ -297,7 +297,8 @@ async def run_brain_meeting(
 
         # ── 7. Implementation room — speak in flow order ─────────────────────
         await em.emit("stage_change", stage="implementation")
-        for rid in active:
+        # Active regions AND the divisions move in to hear the final plan.
+        for rid in active + [d for d in divisions if d not in active]:
             await em.emit("move", agent_id=rid, room="implementation")
         spoken: set[str] = set()
         step = 0
@@ -374,8 +375,9 @@ async def run_brain_meeting(
                 await db.execute("UPDATE memory_groups SET condensed=? WHERE id=?", (new_condensed, group_id))
             await db.commit()
         await em.emit("memory_saved", memory_id=mem_id, name=name)
-        for rid in active:
-            await em.emit("move", agent_id=rid, room="waiting")
+        # Everyone goes home: divisions back to the meeting room, the rest to waiting.
+        for rid in active + [d for d in divisions if d not in active]:
+            await em.emit("move", agent_id=rid, room=("meeting" if onto.level_of(rid) == 2 else "waiting"))
         await em.emit("meeting_end", meeting_id=meeting_id)
         log.info(f"[brain-meeting {meeting_id[:8]}] COMPLETE")
 

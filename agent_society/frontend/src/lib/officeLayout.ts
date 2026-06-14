@@ -332,16 +332,24 @@ export function summonSeat(i: number, n: number): { lx: number; ly: number } {
   };
 }
 
+/** Audience-style seat grid in the implementation room (facing the screen). */
+export function implSeat(i: number, n: number): { lx: number; ly: number } {
+  const cols = n <= 4 ? 2 : 3;
+  const rows = Math.max(1, Math.ceil(n / cols));
+  const col = i % cols;
+  const row = Math.floor(i / cols);
+  const lx = 22 + (col / (cols - 1)) * 56;
+  const ly = rows === 1 ? 58 : 34 + (row / (rows - 1)) * 52;
+  return { lx: clamp(lx, 12, 88), ly: clamp(ly, 30, 90) };
+}
+
 export function roomSlot(room: RoomId, slot: number, count: number): { lx: number; ly: number } {
   if (room === "meeting") {
     // Everyone sits around the table; divisions (seated first) take the top arc.
     return summonSeat(slot, Math.max(6, count));
   }
   if (room === "implementation") {
-    // Vertical queue, in flow order, top → bottom.
-    const n = Math.max(1, count);
-    const ly = n === 1 ? 45 : 10 + (slot / (n - 1)) * 78;
-    return { lx: 50, ly: clamp(ly, 8, 92) };
+    return implSeat(slot, Math.max(2, count));
   }
   // waiting — a vertical column down the thin corridor (two columns if crowded)
   const perCol = 8;

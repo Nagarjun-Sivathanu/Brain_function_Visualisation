@@ -1,5 +1,4 @@
 import type { RoomId } from "@/lib/officeLayout";
-import { summonSeat } from "@/lib/officeLayout";
 
 // Every piece here has been visually verified as a WHOLE crop (no half tiles).
 // col,row = top-left tile in the interiors atlas; w,h = size in tiles.
@@ -61,13 +60,9 @@ function place(room: RoomId, key: string, lx: number, ly: number, z = 5, mul?: n
 // layout; the user can drag/scale/delete from here and it persists.
 export function defaultLayout(): PlacedItem[] {
   const items: PlacedItem[] = [];
-  // meeting centrepiece
+  // meeting centrepiece (chairs are rendered dynamically under each seated region)
   items.push(place("meeting", "rugRed", 50, 52, 2, 3.6));
   items.push(place("meeting", "table", 50, 52, 3, 2.6));
-  Array.from({ length: 12 }).forEach((_, i) => {
-    const c = summonSeat(i, 12);
-    items.push(place("meeting", ["chairRed", "chairBrown", "chairTan"][i % 3], c.lx, c.ly, 4));
-  });
   // meeting walls
   items.push(place("meeting", "blackbd", 50, 6));
   items.push(place("meeting", "windowF", 30, 5));
@@ -83,7 +78,6 @@ export function defaultLayout(): PlacedItem[] {
   // implementation
   items.push(place("implementation", "blackbd", 50, 9, 5, 1.8));
   items.push(place("implementation", "rugGreen", 50, 56, 2, 1.8));
-  [34, 54, 74].forEach((y) => [30, 70].forEach((x) => items.push(place("implementation", "chairBrown", x, y, 4))));
   items.push(place("implementation", "bookshelf", 13, 40));
   items.push(place("implementation", "woodCab", 88, 40));
   items.push(place("implementation", "deskMon", 50, 28));
