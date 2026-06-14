@@ -12,7 +12,7 @@ interface Props {
   dir: Dir;
   walking: boolean;
   frame: number;   // 0..RUN_FRAMES-1 while walking
-  hue: number;     // outfit hue-rotate degrees
+  filter: string;  // outfit CSS filter (hue/saturate/brightness)
   width?: number;  // displayed sprite width in px (height = 2×)
 }
 
@@ -22,13 +22,13 @@ interface Props {
  * direction); standing uses the idle sheet. Falls back to a simple blob if the
  * art isn't present (assets are gitignored / optional).
  */
-export function CharacterSprite({ base, dir, walking, frame, hue, width = 24 }: Props) {
+export function CharacterSprite({ base, dir, walking, frame, filter, width = 24 }: Props) {
   const [broken, setBroken] = useState(false);
   const scale = width / FRAME_W;
   const h = FRAME_H * scale;
 
   if (broken) {
-    return <div style={{ width, height: h, borderRadius: 4, background: `hsl(${(hue + 270) % 360} 45% 55%)`, boxShadow: "inset 0 -4px 6px rgba(0,0,0,.3)" }} />;
+    return <div style={{ width, height: h, borderRadius: 4, background: "#7c6cae", filter, boxShadow: "inset 0 -4px 6px rgba(0,0,0,.3)" }} />;
   }
 
   const sheet = walking ? runSheet(base) : idleSheet(base);
@@ -48,7 +48,7 @@ export function CharacterSprite({ base, dir, walking, frame, hue, width = 24 }: 
           backgroundSize: `${sheetCols * FRAME_W * scale}px ${FRAME_H * scale}px`,
           backgroundPosition: `${-col * FRAME_W * scale}px 0px`,
           imageRendering: "pixelated",
-          filter: `hue-rotate(${hue}deg) saturate(1.15)`,
+          filter,
         }}
       />
     </>

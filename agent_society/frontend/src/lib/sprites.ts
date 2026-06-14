@@ -5,6 +5,11 @@
 // region's own colour), so e.g. motor regions read warm, sensory cool, etc.
 
 const ENC = "/office/Modern%20tiles_Free/Characters_free";
+
+// Shared pixels-per-source-pixel scale for characters AND furniture, so sprites
+// and tiles look consistent next to each other.
+export const PIXEL_SCALE = 2.5;
+
 export const CHAR_BASES = ["Adam", "Alex", "Amelia", "Bob"] as const;
 export type CharBase = (typeof CHAR_BASES)[number];
 
@@ -49,4 +54,21 @@ function hueOf(hex: string): number {
 export function outfitHueRotate(regionColor: string): number {
   const target = hueOf(regionColor || "#8b5cf6");
   return Math.round(((target - 270) % 360 + 360) % 360);
+}
+
+function hash(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+// A full CSS filter that makes each region distinct even when two share a base
+// body: hue from the function colour, plus per-id brightness/saturation jitter
+// (and a small hue nudge) so no two outfits read the same.
+export function outfitFilter(agentId: string, regionColor: string): string {
+  const h = hash(agentId);
+  const hue = (outfitHueRotate(regionColor) + (h % 24) - 12 + 360) % 360;
+  const sat = (1.0 + (h % 6) * 0.09).toFixed(2);       // 1.00 – 1.45
+  const bright = (0.82 + ((h >> 3) % 8) * 0.045).toFixed(2); // 0.82 – 1.13
+  return `hue-rotate(${hue}deg) saturate(${sat}) brightness(${bright})`;
 }

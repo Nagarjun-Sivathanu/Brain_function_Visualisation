@@ -8,7 +8,7 @@ import { useChatStore } from "@/lib/chatStore";
 import { findPath, toOffice, type RoomId } from "@/lib/officeLayout";
 import { type Direction } from "@/components/PixelCharacter";
 import { CharacterSprite } from "@/components/CharacterSprite";
-import { baseFor, outfitHueRotate } from "@/lib/sprites";
+import { baseFor, outfitFilter, PIXEL_SCALE } from "@/lib/sprites";
 import type { Agent } from "@/types/agent";
 
 // % per second — Stardew-ish walking pace.
@@ -55,7 +55,7 @@ export function AgentSprite({ agent, room, lx, ly }: Props) {
   const [direction, setDirection] = useState<Direction>("south");
 
   const charBase = baseFor(agent.id);
-  const charHue = outfitHueRotate(agent.color);
+  const charFilter = outfitFilter(agent.id, agent.color);
 
   // ── Walk animation effect ──
   useEffect(() => {
@@ -167,8 +167,8 @@ export function AgentSprite({ agent, room, lx, ly }: Props) {
             dir={direction}
             walking={isWalking}
             frame={walkFrame}
-            hue={charHue}
-            width={26}
+            filter={charFilter}
+            width={16 * PIXEL_SCALE}
           />
         </motion.div>
       </div>
