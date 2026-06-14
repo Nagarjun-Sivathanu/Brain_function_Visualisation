@@ -1,7 +1,11 @@
 // Office layout with single coordinate system, doorways, and pathfinding.
 // All positions are % within the OfficeView container.
 
-export type RoomId = "lobby" | "meeting" | "desks" | "break";
+// Three brain-meeting rooms:
+//   meeting        — top-left, where divisions sit (main seats) + summoned regions (ring)
+//   implementation — top-right, where regions line up and give their final step
+//   waiting        — bottom strip, idle home for all regions
+export type RoomId = "waiting" | "meeting" | "implementation";
 
 export interface Room {
   id: RoomId;
@@ -11,67 +15,53 @@ export interface Room {
   accent: string;
 }
 
-// Office is divided into 4 rooms by a central wall cross at x=60, y=50.
-// Door gaps cut into those walls.
 export const ROOMS: Record<RoomId, Room> = {
-  lobby: {
-    id: "lobby",
-    label: "LOBBY",
-    bounds: { x: 1, y: 1, w: 58, h: 48 },
-    floor:
-      "repeating-linear-gradient(90deg, #8b6f47 0 28px, #7a5f3d 28px 30px), linear-gradient(180deg, #8b6f47, #7a5f3d)",
-    accent: "#facc15",
-  },
   meeting: {
     id: "meeting",
-    label: "MEETING ROOM",
-    bounds: { x: 61, y: 1, w: 38, h: 48 },
+    label: "MEETING / DISCUSSION",
+    bounds: { x: 1, y: 1, w: 63, h: 77 },
     floor:
       "repeating-linear-gradient(0deg, #6b4f30 0 24px, #5d4426 24px 26px), linear-gradient(180deg, #6b4f30, #5d4426)",
     accent: "#f59e0b",
   },
-  desks: {
-    id: "desks",
-    label: "DESK AREA",
-    bounds: { x: 1, y: 51, w: 58, h: 48 },
+  implementation: {
+    id: "implementation",
+    label: "IMPLEMENTATION",
+    bounds: { x: 66, y: 1, w: 33, h: 77 },
+    floor:
+      "repeating-linear-gradient(90deg, #4f5d6b 0 26px, #44505d 26px 28px), linear-gradient(180deg, #4f5d6b, #44505d)",
+    accent: "#5b8cff",
+  },
+  waiting: {
+    id: "waiting",
+    label: "WAITING ROOM",
+    bounds: { x: 1, y: 80, w: 98, h: 19 },
     floor:
       "repeating-linear-gradient(90deg, #94774e 0 32px, #826641 32px 34px), linear-gradient(180deg, #94774e, #826641)",
     accent: "#22d3ee",
   },
-  break: {
-    id: "break",
-    label: "BREAK ROOM",
-    bounds: { x: 61, y: 51, w: 38, h: 48 },
-    floor:
-      "repeating-conic-gradient(#a08060 0 25%, #8b6b4a 0 50%) 0 0 / 36px 36px, linear-gradient(180deg, #a08060, #8b6b4a)",
-    accent: "#f472b6",
-  },
 };
 
-// Wall config: center cross divides office into 4 rooms.
 export const WALL_THICKNESS = 1.5; // % of office
-export const CENTER_VERT_X = 60;
-export const CENTER_HORZ_Y = 50;
+// Boundary lines between rooms (used by the door waypoints + room borders).
+export const CENTER_VERT_X = 65;   // between meeting and implementation
+export const CENTER_HORZ_Y = 79;   // above the waiting strip
 
-// Doorways: gaps in the central walls. Each door is a waypoint between 2 rooms.
+// Doorways: waypoints agents pass through when moving between rooms.
 export interface Door {
   id: string;
   a: RoomId;
   b: RoomId;
-  /** Office coords for the door's center (the waypoint agents pass through) */
   x: number;
   y: number;
-  /** Orientation of the door: vertical wall = "v", horizontal wall = "h" */
   orient: "v" | "h";
-  /** Width of the door gap in % */
   width: number;
 }
 
 export const DOORS: Door[] = [
-  { id: "lobby-meeting", a: "lobby",   b: "meeting", x: CENTER_VERT_X, y: 25, orient: "v", width: 8 },
-  { id: "lobby-desks",   a: "lobby",   b: "desks",   x: 30, y: CENTER_HORZ_Y, orient: "h", width: 8 },
-  { id: "meeting-break", a: "meeting", b: "break",   x: 80, y: CENTER_HORZ_Y, orient: "h", width: 8 },
-  { id: "desks-break",   a: "desks",   b: "break",   x: CENTER_VERT_X, y: 75, orient: "v", width: 8 },
+  { id: "meeting-implementation", a: "meeting", b: "implementation", x: CENTER_VERT_X, y: 38, orient: "v", width: 12 },
+  { id: "meeting-waiting",        a: "meeting", b: "waiting",        x: 32, y: CENTER_HORZ_Y, orient: "h", width: 12 },
+  { id: "implementation-waiting", a: "implementation", b: "waiting", x: 82, y: CENTER_HORZ_Y, orient: "h", width: 12 },
 ];
 
 function doorBetween(a: RoomId, b: RoomId): Door | undefined {
@@ -89,24 +79,14 @@ export function toOffice(room: RoomId, lx: number, ly: number): { x: number; y: 
 // Room-local obstacle rectangles (0-100%). Used to route AROUND furniture.
 // Each entry: { lx, ly, w, h } — center coords + size.
 const ROOM_OBSTACLES: Record<RoomId, Array<{ lx: number; ly: number; w: number; h: number }>> = {
-  lobby: [
-    { lx: 75, ly: 15, w: 32, h: 14 }, // reception desk
-  ],
   meeting: [
-    { lx: 50, ly: 50, w: 52, h: 58 }, // big oval table (boxed)
+    { lx: 50, ly: 58, w: 44, h: 30 }, // central discussion table (lower-middle)
   ],
-  desks: [
-    // Desks now flush against top/bottom walls so agents sit in front of them
-    { lx: 18, ly: 12, w: 22, h: 16 }, { lx: 50, ly: 12, w: 22, h: 16 }, { lx: 82, ly: 12, w: 22, h: 16 },
-    { lx: 18, ly: 88, w: 22, h: 16 }, { lx: 50, ly: 88, w: 22, h: 16 }, { lx: 82, ly: 88, w: 22, h: 16 },
-    // Bookshelves on side walls — avoid wandering into them
-    { lx: 4, ly: 50, w: 8, h: 18 }, { lx: 96, ly: 50, w: 8, h: 18 },
+  implementation: [
+    { lx: 50, ly: 6, w: 70, h: 10 }, // results board on top wall
   ],
-  break: [
-    { lx: 50, ly: 23, w: 62, h: 18 }, // couch
-    { lx: 50, ly: 68, w: 38, h: 18 }, // coffee table
-    { lx: 9,  ly: 50, w: 12, h: 38 }, // vending
-    { lx: 91, ly: 50, w: 12, h: 38 }, // fridge
+  waiting: [
+    { lx: 50, ly: 50, w: 30, h: 10 }, // bench in the middle of the strip
   ],
 };
 
@@ -319,77 +299,67 @@ function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
 }
 
-/** A grid spot inside the [marginX..100-marginX] × [yTop..yBottom] box. Two
- *  banded rows (top + bottom) keep the open centre corridor walkable. */
-function gridSpot(
-  i: number, n: number,
-  opts: { cols?: number; bandTop?: number; bandBottom?: number; marginX?: number } = {},
-): { lx: number; ly: number } {
-  const marginX = opts.marginX ?? 16;
-  const bandTop = opts.bandTop ?? 26;
-  const bandBottom = opts.bandBottom ?? 74;
-  const perRow = opts.cols ?? Math.ceil(n / 2);
-  const row = Math.floor(i / perRow);      // 0 = top band, 1 = bottom band, …
-  const col = i % perRow;
-  const span = 100 - marginX * 2;
-  const lx = perRow === 1 ? 50 : marginX + (col / (perRow - 1)) * span;
-  const ly = row % 2 === 0 ? bandTop : bandBottom;
-  return { lx, ly };
+// ── Room slot allocation (room-local %) ─────────────────────────────────────
+// `slot` = the agent's index among those currently in the room; `count` = how
+// many are in the room. The store assigns slots in arrival order, so the three
+// level-2 divisions (seated first) take the main seats and summoned regions
+// fill the ring below.
+
+const MAIN_SEATS = [
+  { lx: 22, ly: 16 }, { lx: 50, ly: 14 }, { lx: 78, ly: 16 },
+];
+
+/** Three fixed main seats for the level-2 divisions, across the top. */
+export function mainSeat(i: number): { lx: number; ly: number } {
+  return MAIN_SEATS[i] ?? { lx: 50, ly: 16 };
 }
 
-// ── Wander zones: only walkable corridors, NO furniture overlap ─────────────
-// These are picked from real floor space in each room.
+/** Ring of summon seats around the lower discussion table. */
+export function summonSeat(i: number, n: number): { lx: number; ly: number } {
+  if (n <= 0) return { lx: 50, ly: 58 };
+  const angle = -Math.PI / 2 + (i / n) * Math.PI * 2;
+  return {
+    lx: clamp(50 + 38 * Math.cos(angle), 8, 92),
+    ly: clamp(60 + 24 * Math.sin(angle), 30, 92),
+  };
+}
+
+export function roomSlot(room: RoomId, slot: number, count: number): { lx: number; ly: number } {
+  if (room === "meeting") {
+    if (slot < 3) return mainSeat(slot);
+    return summonSeat(slot - 3, Math.max(1, count - 3));
+  }
+  if (room === "implementation") {
+    // Vertical queue, in flow order, top → bottom.
+    const n = Math.max(1, count);
+    const ly = n === 1 ? 50 : 12 + (slot / (n - 1)) * 76;
+    return { lx: 50, ly: clamp(ly, 12, 90) };
+  }
+  // waiting — a single horizontal row across the strip
+  const n = Math.max(1, count);
+  const lx = n === 1 ? 50 : 5 + (slot / (n - 1)) * 90;
+  return { lx: clamp(lx, 5, 95), ly: 50 };
+}
+
+/** Fallback used for the initial placement of an agent with no explicit slot. */
+export function getDefaultLocal(agentId: string, room: RoomId): { lx: number; ly: number } {
+  return roomSlot(room, indexOf(agentId), total());
+}
+
+// Wander only happens in the waiting room (idle home).
 export const WANDER_ZONES: Record<RoomId, Array<{ lx: number; ly: number }>> = {
-  lobby: [
-    { lx: 20, ly: 45 }, { lx: 35, ly: 60 }, { lx: 50, ly: 70 },
-    { lx: 20, ly: 85 }, { lx: 40, ly: 85 }, { lx: 35, ly: 50 },
-  ],
-  meeting: [
-    // Around the table perimeter only — no center
-    { lx: 12, ly: 35 }, { lx: 12, ly: 65 }, { lx: 88, ly: 35 }, { lx: 88, ly: 65 },
-    { lx: 50, ly: 95 }, { lx: 25, ly: 95 }, { lx: 75, ly: 95 },
-  ],
-  desks: [
-    // Open middle of the room (between the two desk rows)
-    { lx: 30, ly: 45 }, { lx: 50, ly: 45 }, { lx: 70, ly: 45 },
-    { lx: 30, ly: 55 }, { lx: 50, ly: 55 }, { lx: 70, ly: 55 },
-    { lx: 40, ly: 50 }, { lx: 60, ly: 50 },
-  ],
-  break: [
-    // Avoid couch, coffee table, vending, fridge
-    { lx: 28, ly: 50 }, { lx: 72, ly: 50 }, { lx: 50, ly: 45 },
-    { lx: 28, ly: 92 }, { lx: 72, ly: 92 }, { lx: 50, ly: 92 },
+  meeting: [{ lx: 12, ly: 35 }, { lx: 88, ly: 35 }, { lx: 50, ly: 92 }],
+  implementation: [{ lx: 20, ly: 50 }, { lx: 80, ly: 50 }],
+  waiting: [
+    { lx: 12, ly: 35 }, { lx: 30, ly: 65 }, { lx: 50, ly: 35 },
+    { lx: 70, ly: 65 }, { lx: 88, ly: 35 }, { lx: 50, ly: 70 },
   ],
 };
 
-export function getDefaultLocal(
-  agentId: string,
-  room: RoomId,
-): { lx: number; ly: number } {
-  const i = indexOf(agentId);
-  const n = total();
-  if (room === "meeting") return meetingSeat(i, n);
-  if (room === "break") {
-    return gridSpot(i, n, { bandTop: 45, bandBottom: 90, marginX: 24 });
-  }
-  if (room === "desks") {
-    return gridSpot(i, n, { bandTop: 28, bandBottom: 72, marginX: 14 });
-  }
-  // lobby
-  return gridSpot(i, n, { bandTop: 50, bandBottom: 80, marginX: 22 });
-}
-
-export function pickWanderSpot(currentRoom: RoomId): {
-  room: RoomId;
-  lx: number;
-  ly: number;
-} {
-  let room: RoomId = currentRoom;
-  if (Math.random() < 0.35) {
-    const others = (Object.keys(ROOMS) as RoomId[]).filter((r) => r !== currentRoom);
-    room = others[Math.floor(Math.random() * others.length)];
-  }
-  const zones = WANDER_ZONES[room];
+export function pickWanderSpot(currentRoom: RoomId): { room: RoomId; lx: number; ly: number } {
+  // Idle agents only mill around within the waiting room.
+  const room: RoomId = currentRoom === "waiting" ? "waiting" : currentRoom;
+  const zones = WANDER_ZONES[room] ?? WANDER_ZONES.waiting;
   const spot = zones[Math.floor(Math.random() * zones.length)];
   const jitter = () => (Math.random() - 0.5) * 6;
   return { room, lx: spot.lx + jitter(), ly: spot.ly + jitter() };

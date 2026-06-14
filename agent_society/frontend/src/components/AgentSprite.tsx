@@ -26,7 +26,7 @@ export function AgentSprite({ agent, room, lx, ly }: Props) {
   const hoverAgent = useAgentStore((s) => s.hoverAgent);
   const setWalking = useAgentStore((s) => s.setWalking);
   const isMeetingThinking = useMeetingStore((s) =>
-    s.speakingAgentIds.includes(agent.id),
+    s.view.speakingAgentIds.includes(agent.id),
   );
   const isChatThinking = useChatStore(
     (s) => s.threads[agent.id]?.isStreaming ?? false,

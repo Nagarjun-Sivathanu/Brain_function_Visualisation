@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { Agent, AgentStatus } from "@/types/agent";
-import { type RoomId, getDefaultLocal, registerAgentOrder } from "@/lib/officeLayout";
+import { type RoomId, roomSlot, registerAgentOrder } from "@/lib/officeLayout";
 
 export interface AgentPosition {
   room: RoomId;
@@ -13,6 +13,8 @@ interface AgentState {
   statuses: Record<string, AgentStatus>;
   positions: Record<string, AgentPosition>;
   walking: Record<string, boolean>;
+  // Arrival-ordered membership per room — drives main-seat vs ring slotting.
+  roomMembers: Record<RoomId, string[]>;
   selectedAgentId: string | null;
   hoveredAgentId: string | null;
 
@@ -21,6 +23,7 @@ interface AgentState {
   setStatusAll: (status: AgentStatus) => void;
   setAgentPosition: (agentId: string, pos: AgentPosition) => void;
   setWalking: (agentId: string, walking: boolean) => void;
+  placeInRoom: (agentId: string, room: RoomId) => void;
   moveAgentToRoom: (agentId: string, room: RoomId) => void;
   moveAllTo: (room: RoomId) => void;
   resetPositions: () => void;
@@ -28,15 +31,29 @@ interface AgentState {
   hoverAgent: (agentId: string | null) => void;
 }
 
-function defaultPositionsFor(agents: Agent[]): Record<string, AgentPosition> {
-  // Register the roster first so layout math can place agents by index + total.
+const EMPTY_ROOMS = (): Record<RoomId, string[]> => ({ waiting: [], meeting: [], implementation: [] });
+
+/** Recompute even positions for every agent in a room from its membership order. */
+function layoutRoom(members: string[], room: RoomId, positions: Record<string, AgentPosition>) {
+  members.forEach((id, i) => {
+    const p = roomSlot(room, i, members.length);
+    positions[id] = { room, lx: p.lx, ly: p.ly };
+  });
+}
+
+function initialState(agents: Agent[]) {
   registerAgentOrder(agents.map((a) => a.id));
-  const out: Record<string, AgentPosition> = {};
-  for (const a of agents) {
-    const local = getDefaultLocal(a.id, "desks");
-    out[a.id] = { room: "desks", lx: local.lx, ly: local.ly };
-  }
-  return out;
+  const roomMembers = EMPTY_ROOMS();
+  roomMembers.waiting = agents.map((a) => a.id);
+  const positions: Record<string, AgentPosition> = {};
+  layoutRoom(roomMembers.waiting, "waiting", positions);
+  return {
+    agents,
+    statuses: Object.fromEntries(agents.map((a) => [a.id, "idle" as AgentStatus])),
+    positions,
+    walking: Object.fromEntries(agents.map((a) => [a.id, false])),
+    roomMembers,
+  };
 }
 
 export const useAgentStore = create<AgentState>((set) => ({
@@ -44,16 +61,11 @@ export const useAgentStore = create<AgentState>((set) => ({
   statuses: {},
   positions: {},
   walking: {},
+  roomMembers: EMPTY_ROOMS(),
   selectedAgentId: null,
   hoveredAgentId: null,
 
-  setAgents: (agents) =>
-    set({
-      agents,
-      statuses: Object.fromEntries(agents.map((a) => [a.id, "idle" as AgentStatus])),
-      positions: defaultPositionsFor(agents),
-      walking: Object.fromEntries(agents.map((a) => [a.id, false])),
-    }),
+  setAgents: (agents) => set(initialState(agents)),
 
   setStatus: (agentId, status) =>
     set((state) => ({ statuses: { ...state.statuses, [agentId]: status } })),
@@ -69,29 +81,63 @@ export const useAgentStore = create<AgentState>((set) => ({
   setWalking: (agentId, walking) =>
     set((state) => ({ walking: { ...state.walking, [agentId]: walking } })),
 
+  // Move an agent into a room, appended in arrival order, and re-flow the rooms
+  // it left and joined so everyone stays evenly placed.
+  placeInRoom: (agentId, room) =>
+    set((state) => {
+      const roomMembers: Record<RoomId, string[]> = {
+        waiting: [...state.roomMembers.waiting],
+        meeting: [...state.roomMembers.meeting],
+        implementation: [...state.roomMembers.implementation],
+      };
+      const left: RoomId[] = [];
+      (Object.keys(roomMembers) as RoomId[]).forEach((r) => {
+        const idx = roomMembers[r].indexOf(agentId);
+        if (idx >= 0 && r !== room) {
+          roomMembers[r].splice(idx, 1);
+          left.push(r);
+        }
+      });
+      if (!roomMembers[room].includes(agentId)) roomMembers[room].push(agentId);
+
+      const positions = { ...state.positions };
+      layoutRoom(roomMembers[room], room, positions);
+      left.forEach((r) => layoutRoom(roomMembers[r], r, positions));
+      return { roomMembers, positions };
+    }),
+
   moveAgentToRoom: (agentId, room) =>
     set((state) => {
-      const local = getDefaultLocal(agentId, room);
-      return {
-        positions: { ...state.positions, [agentId]: { room, lx: local.lx, ly: local.ly } },
+      // delegate to placeInRoom semantics inline
+      const rm: Record<RoomId, string[]> = {
+        waiting: [...state.roomMembers.waiting],
+        meeting: [...state.roomMembers.meeting],
+        implementation: [...state.roomMembers.implementation],
       };
+      (Object.keys(rm) as RoomId[]).forEach((r) => {
+        const idx = rm[r].indexOf(agentId);
+        if (idx >= 0 && r !== room) rm[r].splice(idx, 1);
+      });
+      if (!rm[room].includes(agentId)) rm[room].push(agentId);
+      const positions = { ...state.positions };
+      (Object.keys(rm) as RoomId[]).forEach((r) => layoutRoom(rm[r], r, positions));
+      return { roomMembers: rm, positions };
     }),
 
   moveAllTo: (room) =>
     set((state) => {
+      const roomMembers = EMPTY_ROOMS();
+      roomMembers[room] = state.agents.map((a) => a.id);
       const positions: Record<string, AgentPosition> = { ...state.positions };
-      for (const a of state.agents) {
-        const local = getDefaultLocal(a.id, room);
-        positions[a.id] = { room, lx: local.lx, ly: local.ly };
-      }
-      return { positions };
+      layoutRoom(roomMembers[room], room, positions);
+      return { roomMembers, positions };
     }),
 
   resetPositions: () =>
-    set((state) => ({
-      positions: defaultPositionsFor(state.agents),
-      statuses: Object.fromEntries(state.agents.map((a) => [a.id, "idle" as AgentStatus])),
-    })),
+    set((state) => {
+      const s = initialState(state.agents);
+      return { positions: s.positions, statuses: s.statuses, roomMembers: s.roomMembers };
+    }),
 
   selectAgent: (agentId) => set({ selectedAgentId: agentId }),
   hoverAgent: (agentId) => set({ hoveredAgentId: agentId }),

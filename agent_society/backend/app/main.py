@@ -13,7 +13,7 @@ from pydantic import BaseModel
 
 from app.database import init_db, get_db
 from app.seed import seed
-from app.orchestrator import run_meeting
+from app.brain_meeting import run_brain_meeting
 from app.agents import build_system_prompt, STAGE_INSTRUCTIONS
 from app.models import call_agent_stream, parse_vote
 
@@ -199,17 +199,11 @@ async def reset_all_memories():
 
 class MeetingRequest(BaseModel):
     scenario: str
-    # When True, the 3 discussion stages (initial_opinions, critique_round,
-    # refinement_round) run through the per-agent tool-calling loop. Models that
-    # don't support tools are auto-swapped to their fallback for the duration.
-    # Voting and consensus stages are unaffected. Default OFF to keep the
-    # zero-cost path the same as before.
+    # Deepest ontology level the recruitment will descend to (2 = divisions only,
+    # 3 = current authored regions, 4/5 = once those regions are authored).
+    max_level: int = 3
+    # Carried for frontend compatibility; the brain-meeting flow ignores them.
     enable_tools: bool = False
-    # When True, a per-meeting briefing is built from Omniscient Observer
-    # (recent app activity + screen-OCR snippets keyword-matched to the
-    # scenario) and rendered inside every agent's prompt as a "USER CONTEXT"
-    # block, with anti-overreliance instructions. Soft-fails if OO isn't
-    # reachable. Default OFF.
     include_observer_context: bool = False
 
 
@@ -220,8 +214,8 @@ async def create_meeting(req: MeetingRequest):
 
     async with get_db() as db:
         await db.execute(
-            "INSERT INTO meetings (id, scenario, status, created_at) VALUES (?, ?, 'pending', ?)",
-            (meeting_id, req.scenario, now),
+            "INSERT INTO meetings (id, scenario, status, created_at, max_level) VALUES (?, ?, 'pending', ?, ?)",
+            (meeting_id, req.scenario, now, req.max_level),
         )
         await db.commit()
 
@@ -231,14 +225,13 @@ async def create_meeting(req: MeetingRequest):
     _meeting_interjections[meeting_id] = []
 
     asyncio.create_task(
-        run_meeting(
+        run_brain_meeting(
             meeting_id,
             req.scenario,
             queue,
             _meeting_proceeds[meeting_id],
             _meeting_interjections[meeting_id],
-            enable_tools=req.enable_tools,
-            include_observer_context=req.include_observer_context,
+            max_level=req.max_level,
         )
     )
 
@@ -246,6 +239,7 @@ async def create_meeting(req: MeetingRequest):
         "meeting_id": meeting_id,
         "scenario": req.scenario,
         "status": "pending",
+        "max_level": req.max_level,
         "enable_tools": req.enable_tools,
         "include_observer_context": req.include_observer_context,
     }
@@ -293,6 +287,41 @@ async def get_meeting(meeting_id: str):
     if not row:
         raise HTTPException(status_code=404, detail="Meeting not found")
     return dict(row)
+
+
+@app.get("/meetings/{meeting_id}/events")
+async def get_meeting_events(meeting_id: str):
+    """Full ordered, timestamped event log for a meeting — the source of truth
+    the frontend replays (and what a saved memory state loads)."""
+    async with get_db() as db:
+        async with db.execute(
+            "SELECT seq, t_ms, type, payload FROM meeting_events WHERE meeting_id = ? ORDER BY seq ASC",
+            (meeting_id,),
+        ) as cursor:
+            rows = await cursor.fetchall()
+    events = []
+    for r in rows:
+        d = dict(r)
+        payload = json.loads(d.pop("payload") or "{}")
+        events.append({"type": d["type"], "seq": d["seq"], "t_ms": d["t_ms"], **payload})
+    return events
+
+
+class RenameMeetingRequest(BaseModel):
+    name: str
+
+
+@app.put("/meetings/{meeting_id}/name")
+async def rename_meeting(meeting_id: str, req: RenameMeetingRequest):
+    """Rename a saved memory state (hippocampus session), chat-history style."""
+    async with get_db() as db:
+        cur = await db.execute(
+            "UPDATE meetings SET name = ? WHERE id = ?", (req.name.strip(), meeting_id)
+        )
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Meeting not found")
+        await db.commit()
+    return {"ok": True, "name": req.name.strip()}
 
 
 @app.get("/meetings/{meeting_id}/messages")

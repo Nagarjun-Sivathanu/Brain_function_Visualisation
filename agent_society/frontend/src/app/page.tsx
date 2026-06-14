@@ -6,6 +6,9 @@ import { useIdleWander } from "@/lib/useIdleWander";
 import { fetchAgents } from "@/lib/api";
 import { OfficeView } from "@/components/OfficeView";
 import { CommPanel } from "@/components/CommPanel";
+import { ControlBar } from "@/components/ControlBar";
+import { TerminalView } from "@/components/TerminalView";
+import { useUiStore } from "@/lib/uiStore";
 
 export default function Home() {
   const setAgents = useAgentStore((s) => s.setAgents);
@@ -48,6 +51,7 @@ export default function Home() {
 
   // Idle agents wander around the office naturally
   useIdleWander();
+  const leftView = useUiStore((s) => s.leftView);
 
   // minmax(0, fr) on BOTH columns is the key — default `fr` tracks have an
   // implicit auto min-content sizing, so a single long token in the chat
@@ -62,7 +66,8 @@ export default function Home() {
         <div className="absolute top-3 left-6 z-30 text-[10px] text-amber-200/80">
           BRAIN REGION SOCIETY · {agents.length} regions
         </div>
-        <OfficeView />
+        <ControlBar />
+        {leftView === "office" ? <OfficeView /> : <TerminalView />}
       </section>
       <section className="flex flex-col bg-[#1e293b] border-l-4 border-[#5d4a2e] min-w-0 overflow-hidden">
         <CommPanel />

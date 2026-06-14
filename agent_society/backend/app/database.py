@@ -37,7 +37,22 @@ async def init_db():
                 scenario TEXT NOT NULL,
                 status TEXT NOT NULL DEFAULT 'pending',
                 created_at TEXT NOT NULL,
-                result_summary TEXT
+                result_summary TEXT,
+                name TEXT,
+                max_level INTEGER NOT NULL DEFAULT 3
+            );
+
+            -- Event-sourced timeline: every meeting event, ordered + timestamped.
+            -- The whole UI (office, terminal view, replay, memory states) is a
+            -- pure function of this log.
+            CREATE TABLE IF NOT EXISTS meeting_events (
+                meeting_id TEXT NOT NULL,
+                seq INTEGER NOT NULL,
+                t_ms INTEGER NOT NULL,
+                type TEXT NOT NULL,
+                payload TEXT NOT NULL,
+                PRIMARY KEY (meeting_id, seq),
+                FOREIGN KEY (meeting_id) REFERENCES meetings(id)
             );
 
             CREATE TABLE IF NOT EXISTS meeting_messages (
@@ -98,5 +113,12 @@ async def init_db():
             cols = {row[1] async for row in cursor}
         if "fallback_model" not in cols:
             await db.execute("ALTER TABLE agents ADD COLUMN fallback_model TEXT")
+
+        async with db.execute("PRAGMA table_info(meetings)") as cursor:
+            mcols = {row[1] async for row in cursor}
+        if "name" not in mcols:
+            await db.execute("ALTER TABLE meetings ADD COLUMN name TEXT")
+        if "max_level" not in mcols:
+            await db.execute("ALTER TABLE meetings ADD COLUMN max_level INTEGER NOT NULL DEFAULT 3")
 
         await db.commit()

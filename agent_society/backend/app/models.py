@@ -43,9 +43,53 @@ MAX_RETRIES = 2
 # No tool-calling on this endpoint — the orchestrator falls back to plain text.
 _TOOL_CAPABLE_MODELS: set[str] = set()
 
+# Offline / demo mode: when LLM_FAKE is truthy, every call returns canned,
+# context-aware content (parsed from the prompt) instead of hitting the network.
+# Lets the whole brain-meeting flow run with no endpoint — for demos, CI, and
+# verifying the orchestrator's event stream deterministically.
+LLM_FAKE = os.getenv("LLM_FAKE", "").strip().lower() in ("1", "true", "yes", "on")
+
 
 def supports_tools(model: str) -> bool:
     return False
+
+
+def _fake_once(messages: list[dict]) -> str:
+    """Canned JSON/text for a one-shot call, inferred from the user prompt shape."""
+    u = messages[-1]["content"] if messages else ""
+    lines = u.splitlines()
+    if '"assessments"' in u:
+        names = [l[2:].strip() for l in lines if l.strip().startswith("- ")]
+        names = [n for n in names if n and n != "(none)"]
+        picks = [{"region": n, "involved": True, "confidence": 0.8, "reason": "demo-mode involvement"} for n in names]
+        return json.dumps({"assessments": picks})
+    if '"triggers"' in u:
+        cands = []
+        for l in lines:
+            if l.startswith("Regions you may interact with:"):
+                cands = [c.strip() for c in l.split(":", 1)[1].split(",") if c.strip() and c.strip() != "n/a"]
+        trig = [{"region": cands[0], "kind": "excitatory", "note": "demo trigger"}] if cands else []
+        return json.dumps({"contribution": "In demo mode I contribute my core function to this scenario.",
+                           "handles": ["the scenario"], "triggers": trig})
+    if '"ordering"' in u:
+        act = []
+        for l in lines:
+            if l.startswith("Active regions:"):
+                act = [c.strip() for c in l.split(":", 1)[1].split(",") if c.strip()]
+        return json.dumps({"ordering": act, "rationale": "demo afferent→efferent ordering"})
+    if '"position"' in u:
+        return json.dumps({"position": "for", "confidence": 0.8, "reasoning": "demo vote — plan looks biologically ordered"})
+    return "Demo-mode response."
+
+
+def _fake_text(messages: list[dict]) -> str:
+    u = messages[-1]["content"] if messages else ""
+    if "final answer" in u.lower():
+        return ("In demo mode, the network integrates the active regions in order and produces a "
+                "coordinated response to the scenario.")
+    if "ONE short" in u or "implementation" in u.lower():
+        return "I perform my step of the agreed plan."
+    return "In demo mode I deliberate, noting where I help or interfere with the other active regions."
 
 
 def _to_messages(system: str, messages: list[dict]) -> list[dict]:
@@ -67,6 +111,11 @@ async def call_agent_stream(
 ) -> AsyncIterator[str]:
     """Stream answer tokens from the endpoint. `model` is accepted for API
     compatibility but every call goes to the configured LLM_MODEL."""
+    if LLM_FAKE:
+        for word in _fake_text(messages).split(" "):
+            await asyncio.sleep(0.005)
+            yield word + " "
+        return
     payload = {
         "model": LLM_MODEL,
         "temperature": float(temperature),
@@ -119,6 +168,8 @@ async def call_agent_once(
     fallback_model: str | None = None,
 ) -> str:
     """One-shot (non-streaming) completion."""
+    if LLM_FAKE:
+        return _fake_once(messages)
     payload = {
         "model": LLM_MODEL,
         "temperature": float(temperature),

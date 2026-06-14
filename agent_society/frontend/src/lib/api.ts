@@ -102,17 +102,12 @@ export async function proceedMeeting(
 
 export async function createMeeting(
   scenario: string,
-  enableTools = false,
-  includeObserverContext = false,
+  maxLevel = 3,
 ): Promise<Meeting> {
   const res = await fetch(`${BASE}/meetings`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      scenario,
-      enable_tools: enableTools,
-      include_observer_context: includeObserverContext,
-    }),
+    body: JSON.stringify({ scenario, max_level: maxLevel }),
   });
   if (!res.ok) throw new Error(`Failed to create meeting: ${res.status}`);
   const data = await res.json();
@@ -122,9 +117,30 @@ export async function createMeeting(
     status: data.status,
     created_at: new Date().toISOString(),
     result_summary: null,
-    enable_tools: data.enable_tools ?? enableTools,
-    include_observer_context: data.include_observer_context ?? includeObserverContext,
+    max_level: data.max_level ?? maxLevel,
   };
+}
+
+/** Full ordered event log for a meeting (used for replay + loading a saved state). */
+export async function fetchMeetingEvents(meetingId: string): Promise<import("@/types/meeting").SseEvent[]> {
+  const res = await fetch(`${BASE}/meetings/${meetingId}/events`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Failed to fetch events: ${res.status}`);
+  return res.json();
+}
+
+export async function listMeetings(): Promise<Meeting[]> {
+  const res = await fetch(`${BASE}/meetings`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Failed to list meetings: ${res.status}`);
+  return res.json();
+}
+
+export async function renameMeeting(meetingId: string, name: string): Promise<void> {
+  const res = await fetch(`${BASE}/meetings/${meetingId}/name`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) throw new Error(`Failed to rename meeting: ${res.status}`);
 }
 
 export interface ObserverBriefingPreview {
