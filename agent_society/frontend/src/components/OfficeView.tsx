@@ -80,6 +80,7 @@ const F = {
   chairTan: { col: 11, row: 31, w: 1, h: 1 },
   sofaGrey: { col: 1, row: 72, w: 3, h: 2 },
   sofaWhite: { col: 4, row: 72, w: 3, h: 2 },
+  sofaTan: { col: 7, row: 72, w: 3, h: 2 },
   palm: { col: 13, row: 44, w: 2, h: 3 },
   plant: { col: 10, row: 44, w: 1, h: 2 },
   tv: { col: 11, row: 79, w: 3, h: 2 },
@@ -89,51 +90,79 @@ const F = {
   filing: { col: 1, row: 16, w: 2, h: 2 },
   globe: { col: 13, row: 36, w: 1, h: 2 },
   lamp: { col: 13, row: 53, w: 1, h: 2 },
+  bookshelf: { col: 11, row: 68, w: 2, h: 3 },
+  woodCab: { col: 8, row: 48, w: 1, h: 3 },
+  deskMon: { col: 10, row: 40, w: 2, h: 2 },
+  blackbd: { col: 10, row: 38, w: 2, h: 2 },
+  windowF: { col: 7, row: 24, w: 1, h: 2 },
+  vending: { col: 3, row: 18, w: 1, h: 3 },
+  fire: { col: 4, row: 69, w: 3, h: 2 },
+  sideTbl: { col: 4, row: 55, w: 1, h: 2 },
+  mirror: { col: 3, row: 67, w: 1, h: 3 },
 } as const;
 
-function T({ p, lx, ly, z = 5 }: { p: { col: number; row: number; w: number; h: number }; lx: number; ly: number; z?: number }) {
-  return <Tile col={p.col} row={p.row} w={p.w} h={p.h} lx={lx} ly={ly} z={z} />;
+type P = { col: number; row: number; w: number; h: number };
+function T({ p, lx, ly, z = 5, mul = 1 }: { p: P; lx: number; ly: number; z?: number; mul?: number }) {
+  return <Tile col={p.col} row={p.row} w={p.w} h={p.h} lx={lx} ly={ly} z={z} mul={mul} />;
 }
 
 function TileFurniture({ room }: { room: Room }) {
   if (room.id === "meeting") {
     const chairTiles = [F.chairRed, F.chairBrown, F.chairTan];
-    const ring = Array.from({ length: 10 }, (_, i) => summonSeat(i, 10));
+    const ring = Array.from({ length: 12 }, (_, i) => summonSeat(i, 12));
     return (
       <Group room={room}>
-        <T p={F.rugRed} lx={50} ly={55} z={2} />
-        <T p={F.map} lx={50} ly={6} />
-        <T p={F.table} lx={50} ly={55} />
+        {/* central boardroom table + chairs */}
+        <T p={F.rugRed} lx={50} ly={53} z={2} mul={2.6} />
+        <T p={F.table} lx={50} ly={53} z={3} mul={2} />
         {ring.map((c, i) => <T key={i} p={chairTiles[i % 3]} lx={c.lx} ly={c.ly} z={4} />)}
-        <T p={F.globe} lx={10} ly={12} />
-        <T p={F.filing} lx={90} ly={12} />
-        <T p={F.palm} lx={92} ly={90} />
-        <T p={F.plant} lx={8} ly={90} />
+        {/* top wall */}
+        <T p={F.blackbd} lx={50} ly={6} />
+        <T p={F.windowF} lx={70} ly={5} />
+        <T p={F.windowF} lx={30} ly={5} />
+        {/* left wall */}
+        <T p={F.bookshelf} lx={6} ly={26} />
+        <T p={F.filing} lx={7} ly={50} />
+        <T p={F.deskMon} lx={8} ly={75} />
+        {/* right wall */}
+        <T p={F.bookshelf} lx={94} ly={26} />
+        <T p={F.woodCab} lx={95} ly={52} />
+        <T p={F.globe} lx={93} ly={74} />
+        {/* corners */}
+        <T p={F.palm} lx={10} ly={93} />
+        <T p={F.palm} lx={90} ly={93} />
       </Group>
     );
   }
   if (room.id === "implementation") {
+    const seats = [34, 54, 74].flatMap((y) => [{ x: 30, y }, { x: 70, y }]);
     return (
       <Group room={room}>
-        <T p={F.tv} lx={50} ly={10} />
-        <T p={F.rugGreen} lx={50} ly={56} z={2} />
-        <T p={F.lamp} lx={14} ly={28} />
-        <T p={F.palm} lx={86} ly={30} />
-        <T p={F.plant} lx={16} ly={88} />
-        <T p={F.globe} lx={84} ly={88} />
+        <T p={F.tv} lx={50} ly={9} mul={1.5} />
+        <T p={F.rugGreen} lx={50} ly={56} z={2} mul={1.8} />
+        {seats.map((c, i) => <T key={i} p={F.chairBrown} lx={c.x} ly={c.y} z={4} />)}
+        <T p={F.bookshelf} lx={13} ly={40} />
+        <T p={F.woodCab} lx={88} ly={40} />
+        <T p={F.deskMon} lx={50} ly={26} />
+        <T p={F.palm} lx={13} ly={86} />
+        <T p={F.plant} lx={87} ly={86} />
+        <T p={F.lamp} lx={50} ly={92} />
       </Group>
     );
   }
-  // waiting lounge
+  // waiting lounge — thin vertical corridor; small items hug the walls
   return (
     <Group room={room}>
-      <T p={F.sofaGrey} lx={45} ly={18} />
-      <T p={F.sofaWhite} lx={55} ly={42} />
-      <T p={F.sofaGrey} lx={45} ly={66} />
-      <T p={F.rugGreen} lx={50} ly={88} />
-      <T p={F.plant} lx={82} ly={10} />
-      <T p={F.lamp} lx={18} ly={32} />
-      <T p={F.palm} lx={82} ly={84} />
+      <T p={F.vending} lx={28} ly={8} />
+      <T p={F.plant} lx={75} ly={8} />
+      <T p={F.sideTbl} lx={25} ly={26} />
+      <T p={F.lamp} lx={76} ly={26} />
+      <T p={F.plant} lx={25} ly={44} />
+      <T p={F.chairTan} lx={75} ly={44} />
+      <T p={F.sideTbl} lx={25} ly={62} />
+      <T p={F.mirror} lx={78} ly={64} />
+      <T p={F.plant} lx={25} ly={82} />
+      <T p={F.fire} lx={60} ly={88} />
     </Group>
   );
 }

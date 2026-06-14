@@ -315,20 +315,20 @@ export function mainSeat(i: number): { lx: number; ly: number } {
   return MAIN_SEATS[i] ?? { lx: 50, ly: 12 };
 }
 
-/** Ring of summon seats around the central conference table. */
+/** Ring of seats hugging the central conference table. */
 export function summonSeat(i: number, n: number): { lx: number; ly: number } {
-  if (n <= 0) return { lx: 50, ly: 55 };
+  if (n <= 0) return { lx: 50, ly: 53 };
   const angle = -Math.PI / 2 + (i / n) * Math.PI * 2;
   return {
-    lx: clamp(50 + 34 * Math.cos(angle), 8, 92),
-    ly: clamp(55 + 32 * Math.sin(angle), 26, 94),
+    lx: clamp(50 + 27 * Math.cos(angle), 10, 90),
+    ly: clamp(53 + 26 * Math.sin(angle), 26, 90),
   };
 }
 
 export function roomSlot(room: RoomId, slot: number, count: number): { lx: number; ly: number } {
   if (room === "meeting") {
-    if (slot < 3) return mainSeat(slot);
-    return summonSeat(slot - 3, Math.max(1, count - 3));
+    // Everyone sits around the table; divisions (seated first) take the top arc.
+    return summonSeat(slot, Math.max(6, count));
   }
   if (room === "implementation") {
     // Vertical queue, in flow order, top → bottom.

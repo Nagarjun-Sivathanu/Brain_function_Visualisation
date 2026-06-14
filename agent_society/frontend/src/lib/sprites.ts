@@ -15,6 +15,11 @@ export type CharBase = (typeof CHAR_BASES)[number];
 
 export function runSheet(base: string) { return `${ENC}/${base}_run_16x16.png`; }
 export function idleSheet(base: string) { return `${ENC}/${base}_idle_16x16.png`; }
+export function sitSheet(base: string) { return `${ENC}/${base}_sit_16x16.png`; }
+
+// Sit sheet is 384×32 (24 frames); frame 0 is the front-facing seated pose.
+export const SIT_COLS = 24;
+export const SIT_DOWN = 0;
 
 // Frame geometry (each frame is 16×32).
 export const FRAME_W = 16;

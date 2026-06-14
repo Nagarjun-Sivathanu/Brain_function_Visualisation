@@ -166,6 +166,7 @@ export function AgentSprite({ agent, room, lx, ly }: Props) {
             base={charBase}
             dir={direction}
             walking={isWalking}
+            sitting={!isWalking && room === "meeting"}
             frame={walkFrame}
             filter={charFilter}
             width={16 * PIXEL_SCALE}

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import {
-  runSheet, idleSheet, FRAME_W, FRAME_H, RUN_FRAMES, RUN_BLOCK, IDLE_FRAME,
+  runSheet, idleSheet, sitSheet, FRAME_W, FRAME_H, RUN_FRAMES, RUN_BLOCK, IDLE_FRAME,
+  SIT_COLS, SIT_DOWN,
 } from "@/lib/sprites";
 
 type Dir = "south" | "north" | "east" | "west";
@@ -11,6 +12,7 @@ interface Props {
   base: string;
   dir: Dir;
   walking: boolean;
+  sitting?: boolean;
   frame: number;   // 0..RUN_FRAMES-1 while walking
   filter: string;  // outfit CSS filter (hue/saturate/brightness)
   width?: number;  // displayed sprite width in px (height = 2×)
@@ -22,7 +24,7 @@ interface Props {
  * direction); standing uses the idle sheet. Falls back to a simple blob if the
  * art isn't present (assets are gitignored / optional).
  */
-export function CharacterSprite({ base, dir, walking, frame, filter, width = 24 }: Props) {
+export function CharacterSprite({ base, dir, walking, sitting, frame, filter, width = 24 }: Props) {
   const [broken, setBroken] = useState(false);
   const scale = width / FRAME_W;
   const h = FRAME_H * scale;
@@ -31,9 +33,14 @@ export function CharacterSprite({ base, dir, walking, frame, filter, width = 24 
     return <div style={{ width, height: h, borderRadius: 4, background: "#7c6cae", filter, boxShadow: "inset 0 -4px 6px rgba(0,0,0,.3)" }} />;
   }
 
-  const sheet = walking ? runSheet(base) : idleSheet(base);
-  const sheetCols = walking ? 24 : 4;
-  const col = walking ? RUN_BLOCK[dir] * RUN_FRAMES + (frame % RUN_FRAMES) : IDLE_FRAME[dir];
+  let sheet: string, sheetCols: number, col: number;
+  if (walking) {
+    sheet = runSheet(base); sheetCols = 24; col = RUN_BLOCK[dir] * RUN_FRAMES + (frame % RUN_FRAMES);
+  } else if (sitting) {
+    sheet = sitSheet(base); sheetCols = SIT_COLS; col = SIT_DOWN;
+  } else {
+    sheet = idleSheet(base); sheetCols = 4; col = IDLE_FRAME[dir];
+  }
 
   return (
     <>

@@ -25,11 +25,11 @@ export function useAtlasReady(): boolean {
  *  rendered at the shared PIXEL_SCALE so it matches the character sprites.
  *  Positioned (centered) at room-local lx/ly %. */
 export function Tile({
-  col, row, w, h, lx, ly, z = 5,
+  col, row, w, h, lx, ly, z = 5, mul = 1,
 }: {
-  col: number; row: number; w: number; h: number; lx: number; ly: number; z?: number;
+  col: number; row: number; w: number; h: number; lx: number; ly: number; z?: number; mul?: number;
 }) {
-  const s = PIXEL_SCALE;
+  const s = PIXEL_SCALE * mul;
   return (
     <div
       className="absolute"
