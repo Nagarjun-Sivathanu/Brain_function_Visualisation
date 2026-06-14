@@ -1,0 +1,18 @@
+{
+  "region": "right cerebral hemisphere",
+  "hierarchy_level": 4,
+  "parent": "telencephalon",
+  "components": [
+    "right frontal lobe",
+    "right parietal lobe",
+    "right temporal lobe",
+    "right occipital lobe",
+    "right limbic lobe",
+    "right insula",
+    "subcortex of right cerebral hemisphere",
+    "right lateral ventricle"
+  ],
+  "references": {
+    "right_cerebral_hemisphere_wikipedia": "https://en.wikipedia.org/wiki/Cerebral_hemisphere"
+  }
+}

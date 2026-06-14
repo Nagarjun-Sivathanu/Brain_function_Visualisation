@@ -1,0 +1,9 @@
+{
+  "region": "left red nucleus",
+  "hierarchy_level": 4,
+  "parent": "left side of midbrain",
+  "components": [],
+  "references": {
+    "left_red_nucleus_wikipedia": "https://en.wikipedia.org/wiki/Red_nucleus"
+  }
+}

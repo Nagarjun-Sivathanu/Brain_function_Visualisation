@@ -1,0 +1,13 @@
+{
+  "region": "left insula",
+  "hierarchy_level": 5,
+  "parent": "left cerebral hemisphere",
+  "components": [
+    "anterior insula",
+    "posterior insula",
+    "limen insulae"
+  ],
+  "references": {
+    "left_insula_wikipedia": "https://en.wikipedia.org/wiki/Insular_cortex"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "region": "subcortex of left cerebral hemisphere",
+  "hierarchy_level": 5,
+  "parent": "left cerebral hemisphere",
+  "components": [
+    "striatum (caudate, putamen, nucleus accumbens)",
+    "lentiform nucleus (putamen + globus pallidus)",
+    "fornix",
+    "cerebral white matter"
+  ],
+  "references": {
+    "subcortex_of_left_cerebral_hemisphere_wikipedia": "https://en.wikipedia.org/wiki/Basal_ganglia"
+  }
+}

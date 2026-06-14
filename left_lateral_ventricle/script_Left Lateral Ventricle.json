@@ -1,0 +1,15 @@
+{
+  "region": "left lateral ventricle",
+  "hierarchy_level": 5,
+  "parent": "left cerebral hemisphere",
+  "components": [
+    "anterior (frontal) horn",
+    "body",
+    "temporal horn",
+    "occipital horn",
+    "choroid plexus"
+  ],
+  "references": {
+    "left_lateral_ventricle_wikipedia": "https://en.wikipedia.org/wiki/Lateral_ventricles"
+  }
+}

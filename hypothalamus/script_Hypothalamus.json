@@ -1,0 +1,20 @@
+{
+  "region": "hypothalamus",
+  "hierarchy_level": 4,
+  "parent": "diencephalon",
+  "components": [
+    "preoptic area",
+    "supraoptic nucleus",
+    "paraventricular nucleus",
+    "suprachiasmatic nucleus",
+    "arcuate nucleus",
+    "ventromedial nucleus",
+    "lateral hypothalamic area",
+    "mammillary bodies"
+  ],
+  "references": {
+    "hypothalamus_wikipedia": "https://en.wikipedia.org/wiki/Hypothalamus",
+    "hypothalamus_kenhub": "https://www.kenhub.com/en/library/anatomy/the-hypothalamus",
+    "hypothalamus_ncbi_statpearls": "https://www.ncbi.nlm.nih.gov/books/NBK525993/"
+  }
+}

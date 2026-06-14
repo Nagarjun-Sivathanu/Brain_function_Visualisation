@@ -1,0 +1,18 @@
+{
+  "region": "thalamus",
+  "hierarchy_level": 4,
+  "parent": "diencephalon",
+  "components": [
+    "anterior nuclei",
+    "dorsomedial nucleus",
+    "ventral nuclear group (VA, VL, VPL, VPM)",
+    "lateral nuclear group (pulvinar, LD, LP)",
+    "intralaminar nuclei",
+    "reticular nucleus",
+    "geniculate bodies (metathalamus)"
+  ],
+  "references": {
+    "thalamus_wikipedia": "https://en.wikipedia.org/wiki/Thalamus",
+    "thalamus_kenhub": "https://www.kenhub.com/en/library/anatomy/the-thalamus"
+  }
+}

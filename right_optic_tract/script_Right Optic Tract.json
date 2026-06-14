@@ -1,0 +1,9 @@
+{
+  "region": "right optic tract",
+  "hierarchy_level": 4,
+  "parent": "diencephalon",
+  "components": [],
+  "references": {
+    "right_optic_tract_wikipedia": "https://en.wikipedia.org/wiki/Optic_tract"
+  }
+}

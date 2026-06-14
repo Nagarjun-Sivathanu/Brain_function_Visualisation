@@ -1,0 +1,14 @@
+{
+  "region": "right hemisphere of cerebellum",
+  "hierarchy_level": 5,
+  "parent": "cerebellum",
+  "components": [
+    "lateral hemispheric zones",
+    "intermediate zone",
+    "dentate nucleus",
+    "cerebellar white matter"
+  ],
+  "references": {
+    "right_hemisphere_of_cerebellum_wikipedia": "https://en.wikipedia.org/wiki/Cerebellum"
+  }
+}

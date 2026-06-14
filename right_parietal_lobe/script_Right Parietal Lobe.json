@@ -1,0 +1,15 @@
+{
+  "region": "right parietal lobe",
+  "hierarchy_level": 5,
+  "parent": "right cerebral hemisphere",
+  "components": [
+    "postcentral gyrus (primary somatosensory cortex)",
+    "superior parietal lobule",
+    "inferior parietal lobule (supramarginal & angular gyri)",
+    "intraparietal sulcus",
+    "precuneus"
+  ],
+  "references": {
+    "right_parietal_lobe_wikipedia": "https://en.wikipedia.org/wiki/Parietal_lobe"
+  }
+}

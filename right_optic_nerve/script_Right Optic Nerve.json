@@ -1,0 +1,9 @@
+{
+  "region": "right optic nerve",
+  "hierarchy_level": 4,
+  "parent": "diencephalon",
+  "components": [],
+  "references": {
+    "right_optic_nerve_wikipedia": "https://en.wikipedia.org/wiki/Optic_nerve"
+  }
+}

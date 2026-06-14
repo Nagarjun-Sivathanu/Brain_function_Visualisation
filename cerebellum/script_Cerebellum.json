@@ -1,0 +1,17 @@
+{
+  "region": "cerebellum",
+  "hierarchy_level": 4,
+  "parent": "metencephalon",
+  "components": [
+    "left hemisphere of cerebellum",
+    "right hemisphere of cerebellum",
+    "vermis",
+    "flocculonodular lobe",
+    "deep nuclei (dentate, interposed, fastigial)"
+  ],
+  "references": {
+    "cerebellum_wikipedia": "https://en.wikipedia.org/wiki/Cerebellum",
+    "cerebellum_kenhub": "https://www.kenhub.com/en/library/anatomy/the-cerebellum",
+    "cerebellum_ncbi_statpearls": "https://www.ncbi.nlm.nih.gov/books/NBK538167/"
+  }
+}

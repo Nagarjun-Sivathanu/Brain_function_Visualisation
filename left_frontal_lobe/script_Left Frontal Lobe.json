@@ -1,0 +1,16 @@
+{
+  "region": "left frontal lobe",
+  "hierarchy_level": 5,
+  "parent": "left cerebral hemisphere",
+  "components": [
+    "precentral gyrus (primary motor cortex)",
+    "premotor & supplementary motor areas",
+    "prefrontal cortex",
+    "inferior frontal gyrus",
+    "frontal eye fields",
+    "orbitofrontal cortex"
+  ],
+  "references": {
+    "left_frontal_lobe_wikipedia": "https://en.wikipedia.org/wiki/Frontal_lobe"
+  }
+}

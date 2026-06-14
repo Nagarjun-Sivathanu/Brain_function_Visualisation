@@ -1,0 +1,9 @@
+{
+  "region": "left mammillary body",
+  "hierarchy_level": 5,
+  "parent": "hypothalamus",
+  "components": [],
+  "references": {
+    "left_mammillary_body_wikipedia": "https://en.wikipedia.org/wiki/Mammillary_body"
+  }
+}

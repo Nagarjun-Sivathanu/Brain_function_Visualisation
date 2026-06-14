@@ -1,0 +1,12 @@
+{
+  "region": "septum of telencephalon",
+  "hierarchy_level": 4,
+  "parent": "telencephalon",
+  "components": [
+    "septal nuclei",
+    "septum pellucidum"
+  ],
+  "references": {
+    "septum_of_telencephalon_wikipedia": "https://en.wikipedia.org/wiki/Septal_nuclei"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "region": "epithalamus",
+  "hierarchy_level": 4,
+  "parent": "diencephalon",
+  "components": [
+    "pineal gland",
+    "habenular nuclei",
+    "stria medullaris",
+    "posterior commissure"
+  ],
+  "references": {
+    "epithalamus_wikipedia": "https://en.wikipedia.org/wiki/Epithalamus",
+    "epithalamus_kenhub": "https://www.kenhub.com/en/library/anatomy/the-epithalamus"
+  }
+}

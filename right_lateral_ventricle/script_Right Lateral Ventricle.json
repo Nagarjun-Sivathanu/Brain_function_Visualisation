@@ -1,0 +1,15 @@
+{
+  "region": "right lateral ventricle",
+  "hierarchy_level": 5,
+  "parent": "right cerebral hemisphere",
+  "components": [
+    "anterior (frontal) horn",
+    "body",
+    "temporal horn",
+    "occipital horn",
+    "choroid plexus"
+  ],
+  "references": {
+    "right_lateral_ventricle_wikipedia": "https://en.wikipedia.org/wiki/Lateral_ventricles"
+  }
+}

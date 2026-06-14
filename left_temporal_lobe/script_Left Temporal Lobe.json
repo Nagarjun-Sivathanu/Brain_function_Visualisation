@@ -1,0 +1,16 @@
+{
+  "region": "left temporal lobe",
+  "hierarchy_level": 5,
+  "parent": "left cerebral hemisphere",
+  "components": [
+    "superior/middle/inferior temporal gyri",
+    "transverse temporal gyrus (primary auditory cortex)",
+    "fusiform gyrus",
+    "hippocampus (medial)",
+    "amygdala (medial)",
+    "temporal pole"
+  ],
+  "references": {
+    "left_temporal_lobe_wikipedia": "https://en.wikipedia.org/wiki/Temporal_lobe"
+  }
+}

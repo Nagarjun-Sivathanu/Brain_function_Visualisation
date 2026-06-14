@@ -1,0 +1,14 @@
+{
+  "region": "right occipital lobe",
+  "hierarchy_level": 5,
+  "parent": "right cerebral hemisphere",
+  "components": [
+    "primary visual cortex (V1, calcarine)",
+    "visual association areas (V2–V5)",
+    "cuneus",
+    "lingual gyrus"
+  ],
+  "references": {
+    "right_occipital_lobe_wikipedia": "https://en.wikipedia.org/wiki/Occipital_lobe"
+  }
+}

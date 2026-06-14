@@ -1,0 +1,12 @@
+{
+  "region": "left substantia nigra",
+  "hierarchy_level": 4,
+  "parent": "left side of midbrain",
+  "components": [
+    "pars compacta (SNc)",
+    "pars reticulata (SNr)"
+  ],
+  "references": {
+    "left_substantia_nigra_wikipedia": "https://en.wikipedia.org/wiki/Substantia_nigra"
+  }
+}

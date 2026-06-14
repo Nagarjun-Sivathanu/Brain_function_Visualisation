@@ -1,0 +1,12 @@
+{
+  "region": "right metathalamus",
+  "hierarchy_level": 5,
+  "parent": "thalamus",
+  "components": [
+    "right lateral geniculate body",
+    "right medial geniculate body"
+  ],
+  "references": {
+    "right_metathalamus_wikipedia": "https://en.wikipedia.org/wiki/Metathalamus"
+  }
+}

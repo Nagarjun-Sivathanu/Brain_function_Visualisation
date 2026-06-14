@@ -1,0 +1,15 @@
+{
+  "region": "right thalamus",
+  "hierarchy_level": 5,
+  "parent": "thalamus",
+  "components": [
+    "right ventral nuclear group",
+    "right lateral nuclear group",
+    "right anterior nucleus",
+    "right dorsomedial nucleus",
+    "right intralaminar nuclei"
+  ],
+  "references": {
+    "right_thalamus_wikipedia": "https://en.wikipedia.org/wiki/Thalamus"
+  }
+}

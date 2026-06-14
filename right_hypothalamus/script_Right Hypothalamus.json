@@ -1,0 +1,14 @@
+{
+  "region": "right hypothalamus",
+  "hierarchy_level": 5,
+  "parent": "hypothalamus",
+  "components": [
+    "right preoptic area",
+    "right tuberal nuclei",
+    "right posterior hypothalamus",
+    "right subthalamic nucleus"
+  ],
+  "references": {
+    "right_hypothalamus_wikipedia": "https://en.wikipedia.org/wiki/Hypothalamus"
+  }
+}

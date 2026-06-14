@@ -1,0 +1,12 @@
+{
+  "region": "right substantia nigra",
+  "hierarchy_level": 4,
+  "parent": "right side of midbrain",
+  "components": [
+    "pars compacta (SNc)",
+    "pars reticulata (SNr)"
+  ],
+  "references": {
+    "right_substantia_nigra_wikipedia": "https://en.wikipedia.org/wiki/Substantia_nigra"
+  }
+}

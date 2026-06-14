@@ -1,0 +1,14 @@
+{
+  "region": "right limbic lobe",
+  "hierarchy_level": 5,
+  "parent": "right cerebral hemisphere",
+  "components": [
+    "cingulate gyrus",
+    "hippocampus",
+    "amygdala",
+    "parahippocampal gyrus"
+  ],
+  "references": {
+    "right_limbic_lobe_wikipedia": "https://en.wikipedia.org/wiki/Limbic_lobe"
+  }
+}

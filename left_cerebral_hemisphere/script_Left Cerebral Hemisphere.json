@@ -1,0 +1,18 @@
+{
+  "region": "left cerebral hemisphere",
+  "hierarchy_level": 4,
+  "parent": "telencephalon",
+  "components": [
+    "left frontal lobe",
+    "left parietal lobe",
+    "left temporal lobe",
+    "left occipital lobe",
+    "left limbic lobe",
+    "left insula",
+    "subcortex of left cerebral hemisphere",
+    "left lateral ventricle"
+  ],
+  "references": {
+    "left_cerebral_hemisphere_wikipedia": "https://en.wikipedia.org/wiki/Cerebral_hemisphere"
+  }
+}

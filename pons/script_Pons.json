@@ -1,0 +1,16 @@
+{
+  "region": "pons",
+  "hierarchy_level": 4,
+  "parent": "metencephalon",
+  "components": [
+    "pontine nuclei",
+    "pontine respiratory group",
+    "locus coeruleus (adjacent)",
+    "cranial nerve nuclei V–VIII",
+    "reticular formation"
+  ],
+  "references": {
+    "pons_wikipedia": "https://en.wikipedia.org/wiki/Pons",
+    "pons_kenhub": "https://www.kenhub.com/en/library/anatomy/the-pons"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "region": "anterior commissure",
+  "hierarchy_level": 4,
+  "parent": "telencephalon",
+  "components": [],
+  "references": {
+    "anterior_commissure_wikipedia": "https://en.wikipedia.org/wiki/Anterior_commissure"
+  }
+}

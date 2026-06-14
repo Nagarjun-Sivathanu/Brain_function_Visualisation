@@ -1,0 +1,9 @@
+{
+  "region": "pineal body",
+  "hierarchy_level": 5,
+  "parent": "epithalamus",
+  "components": [],
+  "references": {
+    "pineal_body_wikipedia": "https://en.wikipedia.org/wiki/Pineal_gland"
+  }
+}

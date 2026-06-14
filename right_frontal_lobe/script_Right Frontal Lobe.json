@@ -1,0 +1,16 @@
+{
+  "region": "right frontal lobe",
+  "hierarchy_level": 5,
+  "parent": "right cerebral hemisphere",
+  "components": [
+    "precentral gyrus (primary motor cortex)",
+    "premotor & supplementary motor areas",
+    "prefrontal cortex",
+    "inferior frontal gyrus",
+    "frontal eye fields",
+    "orbitofrontal cortex"
+  ],
+  "references": {
+    "right_frontal_lobe_wikipedia": "https://en.wikipedia.org/wiki/Frontal_lobe"
+  }
+}

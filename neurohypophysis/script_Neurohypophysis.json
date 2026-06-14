@@ -1,0 +1,13 @@
+{
+  "region": "neurohypophysis",
+  "hierarchy_level": 5,
+  "parent": "hypothalamus",
+  "components": [
+    "posterior pituitary",
+    "infundibulum",
+    "adenohypophysis (anterior pituitary, associated)"
+  ],
+  "references": {
+    "neurohypophysis_wikipedia": "https://en.wikipedia.org/wiki/Posterior_pituitary"
+  }
+}

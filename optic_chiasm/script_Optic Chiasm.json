@@ -1,0 +1,9 @@
+{
+  "region": "optic chiasm",
+  "hierarchy_level": 5,
+  "parent": "hypothalamus",
+  "components": [],
+  "references": {
+    "optic_chiasm_wikipedia": "https://en.wikipedia.org/wiki/Optic_chiasm"
+  }
+}

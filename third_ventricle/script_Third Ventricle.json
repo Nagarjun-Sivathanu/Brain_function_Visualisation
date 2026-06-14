@@ -1,0 +1,13 @@
+{
+  "region": "third ventricle",
+  "hierarchy_level": 4,
+  "parent": "diencephalon",
+  "components": [
+    "choroid plexus of the third ventricle",
+    "interventricular foramina (of Monro)",
+    "cerebral aqueduct (outflow)"
+  ],
+  "references": {
+    "third_ventricle_wikipedia": "https://en.wikipedia.org/wiki/Third_ventricle"
+  }
+}

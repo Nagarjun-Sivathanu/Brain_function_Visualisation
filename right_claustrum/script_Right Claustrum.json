@@ -1,0 +1,9 @@
+{
+  "region": "right claustrum",
+  "hierarchy_level": 5,
+  "parent": "right cerebral hemisphere",
+  "components": [],
+  "references": {
+    "right_claustrum_wikipedia": "https://en.wikipedia.org/wiki/Claustrum"
+  }
+}

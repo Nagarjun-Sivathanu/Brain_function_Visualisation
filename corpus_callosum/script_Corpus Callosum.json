@@ -1,0 +1,14 @@
+{
+  "region": "corpus callosum",
+  "hierarchy_level": 4,
+  "parent": "telencephalon",
+  "components": [
+    "rostrum",
+    "genu",
+    "body",
+    "splenium"
+  ],
+  "references": {
+    "corpus_callosum_wikipedia": "https://en.wikipedia.org/wiki/Corpus_callosum"
+  }
+}
