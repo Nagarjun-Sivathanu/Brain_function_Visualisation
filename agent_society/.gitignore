@@ -35,3 +35,10 @@ yarn-debug.log*
 # ── Misc ─────────────────────────────────────────────────
 .cache/
 coverage/
+
+# ── Third-party art assets (LimeZu Modern Interiors free) ────────────────
+# Non-commercial license — NOT redistributed in this repo. Download the free
+# pack from https://limezu.itch.io/moderninteriors and unzip into
+# frontend/public/office/  (see frontend/public/office/README.md).
+frontend/public/office/*
+!frontend/public/office/README.md

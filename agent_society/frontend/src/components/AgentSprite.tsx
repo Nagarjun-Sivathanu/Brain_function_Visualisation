@@ -6,7 +6,9 @@ import { useAgentStore } from "@/lib/agentStore";
 import { useMeetingStore } from "@/lib/meetingStore";
 import { useChatStore } from "@/lib/chatStore";
 import { findPath, toOffice, type RoomId } from "@/lib/officeLayout";
-import { PixelCharacter, type Direction } from "@/components/PixelCharacter";
+import { type Direction } from "@/components/PixelCharacter";
+import { CharacterSprite } from "@/components/CharacterSprite";
+import { baseFor, outfitHueRotate } from "@/lib/sprites";
 import type { Agent } from "@/types/agent";
 
 // % per second — Stardew-ish walking pace.
@@ -49,8 +51,11 @@ export function AgentSprite({ agent, room, lx, ly }: Props) {
   const walkIdRef = useRef(0);
 
   const [isWalking, setIsWalkingLocal] = useState(false);
-  const [walkStep, setWalkStep] = useState<0 | 1>(0);
+  const [walkFrame, setWalkFrame] = useState(0);
   const [direction, setDirection] = useState<Direction>("south");
+
+  const charBase = baseFor(agent.id);
+  const charHue = outfitHueRotate(agent.color);
 
   // ── Walk animation effect ──
   useEffect(() => {
@@ -78,8 +83,8 @@ export function AgentSprite({ agent, room, lx, ly }: Props) {
       setIsWalkingLocal(true);
       setWalking(agent.id, true);
       stepInterval = setInterval(() => {
-        setWalkStep((s) => (s === 0 ? 1 : 0));
-      }, 240);
+        setWalkFrame((s) => (s + 1) % 6);
+      }, 120);
 
       for (let i = 1; i < path.length; i++) {
         if (walkIdRef.current !== myId) return; // cancelled
@@ -104,7 +109,7 @@ export function AgentSprite({ agent, room, lx, ly }: Props) {
 
       setIsWalkingLocal(false);
       setWalking(agent.id, false);
-      setWalkStep(0);
+      setWalkFrame(0);
       setDirection("south");
       if (stepInterval) clearInterval(stepInterval);
     }
@@ -157,12 +162,13 @@ export function AgentSprite({ agent, room, lx, ly }: Props) {
           animate={isWalking ? {} : { y: [0, -1, 0] }}
           transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
         >
-          <PixelCharacter
-            color={agent.color}
-            seed={agent.id}
-            direction={direction}
-            step={walkStep}
-            size={40}
+          <CharacterSprite
+            base={charBase}
+            dir={direction}
+            walking={isWalking}
+            frame={walkFrame}
+            hue={charHue}
+            width={26}
           />
         </motion.div>
       </div>
