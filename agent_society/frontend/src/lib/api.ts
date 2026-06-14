@@ -103,11 +103,12 @@ export async function proceedMeeting(
 export async function createMeeting(
   scenario: string,
   maxLevel = 3,
+  groupId?: string | null,
 ): Promise<Meeting> {
   const res = await fetch(`${BASE}/meetings`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ scenario, max_level: maxLevel }),
+    body: JSON.stringify({ scenario, max_level: maxLevel, group_id: groupId ?? null }),
   });
   if (!res.ok) throw new Error(`Failed to create meeting: ${res.status}`);
   const data = await res.json();
@@ -141,6 +142,47 @@ export async function renameMeeting(meetingId: string, name: string): Promise<vo
     body: JSON.stringify({ name }),
   });
   if (!res.ok) throw new Error(`Failed to rename meeting: ${res.status}`);
+}
+
+// ── Hippocampus memory groups (ChatGPT-style conversation threads) ──────────
+export interface MemoryGroup {
+  id: string;
+  name: string;
+  created_at: string;
+  condensed?: string;
+  meeting_count?: number;
+}
+export interface MemoryGroupDetail extends MemoryGroup {
+  meetings: { id: string; scenario: string; status: string; name: string | null; created_at: string }[];
+}
+
+export async function createGroup(name?: string): Promise<MemoryGroup> {
+  const res = await fetch(`${BASE}/memory_groups`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: name ?? null }),
+  });
+  if (!res.ok) throw new Error(`create group failed: ${res.status}`);
+  return res.json();
+}
+
+export async function listGroups(): Promise<MemoryGroup[]> {
+  const res = await fetch(`${BASE}/memory_groups`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`list groups failed: ${res.status}`);
+  return res.json();
+}
+
+export async function getGroup(groupId: string): Promise<MemoryGroupDetail> {
+  const res = await fetch(`${BASE}/memory_groups/${groupId}`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`get group failed: ${res.status}`);
+  return res.json();
+}
+
+export async function renameGroup(groupId: string, name: string): Promise<void> {
+  const res = await fetch(`${BASE}/memory_groups/${groupId}/name`, {
+    method: "PUT", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) throw new Error(`rename group failed: ${res.status}`);
 }
 
 export interface ObserverBriefingPreview {

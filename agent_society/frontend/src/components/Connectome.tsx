@@ -22,7 +22,18 @@ export function Connectome() {
   const positions = useAgentStore((s) => s.positions);
   const edges = useMeetingStore((s) => s.view.edges);
 
-  const drawn = edges.filter((e) => positions[e.from] && positions[e.to]);
+  // Only draw an interaction edge when BOTH regions are currently seated in the
+  // meeting room — otherwise edges to waiting/implementation regions sprawl
+  // across the whole office as stray lines. Dedupe repeated pairs.
+  const seen = new Set<string>();
+  const drawn = edges.filter((e) => {
+    const a = positions[e.from], b = positions[e.to];
+    if (!a || !b || a.room !== "meeting" || b.room !== "meeting") return false;
+    const key = `${e.from}|${e.to}|${e.kind}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
   if (drawn.length === 0) return null;
 
   return (
@@ -39,20 +50,20 @@ export function Connectome() {
         const pa = toOffice(a.room, a.lx, a.ly);
         const pb = toOffice(b.room, b.lx, b.ly);
         const color = EDGE_COLOR[e.kind] ?? "#9ca3af";
-        const dash = e.kind === "inhibitory" || e.kind === "gating" ? "2 1.5" : undefined;
-        // slight curve so reciprocal edges don't overlap
-        const mx = (pa.x + pb.x) / 2 + (pb.y - pa.y) * 0.08;
-        const my = (pa.y + pb.y) / 2 - (pb.x - pa.x) * 0.08;
+        const dash = e.kind === "inhibitory" || e.kind === "gating" ? "1.6 1.2" : undefined;
+        // gentle curve so reciprocal edges separate slightly
+        const mx = (pa.x + pb.x) / 2 + (pb.y - pa.y) * 0.05;
+        const my = (pa.y + pb.y) / 2 - (pb.x - pa.x) * 0.05;
         return (
           <path
             key={i}
             d={`M ${pa.x} ${pa.y} Q ${mx} ${my} ${pb.x} ${pb.y}`}
             fill="none"
             stroke={color}
-            strokeWidth={0.4}
+            strokeWidth={0.28}
             strokeDasharray={dash}
             markerEnd={`url(#arrow-${e.kind})`}
-            opacity={0.75}
+            opacity={0.55}
           />
         );
       })}

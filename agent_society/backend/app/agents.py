@@ -160,9 +160,12 @@ AGENT_DEFINITIONS = [
 ]
 
 # All agents run on one shared model (no per-agent provider routing here).
+from app import brain_ontology as _onto  # noqa: E402
+
 for _a in AGENT_DEFINITIONS:
     _a["model"] = LLM_LABEL
     _a["fallback_model"] = None
+    _a["level"] = _onto.level_of(_a["id"])  # ontology depth, for UI depth filtering
 
 
 SPECIFICITY_DIRECTIVE = (

@@ -2,21 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useAgentStore } from "@/lib/agentStore";
-import {
-  useMeetingStore, STAGE_ORDER, STAGE_LABELS,
-} from "@/lib/meetingStore";
+import { useMeetingStore, STAGE_ORDER, STAGE_LABELS } from "@/lib/meetingStore";
+import { useUiStore } from "@/lib/uiStore";
 import type { MeetingStage } from "@/types/meeting";
 import {
-  createMeeting, streamMeeting, proceedMeeting,
-  fetchMeetingEvents, listMeetings, renameMeeting,
+  createMeeting, streamMeeting, fetchMeetingEvents,
+  createGroup, listGroups, getGroup, renameGroup,
+  type MemoryGroup,
 } from "@/lib/api";
-import type { Meeting } from "@/types/meeting";
 
 const display = (id: string) => id.replace(/_/g, " ");
 
 export function CommPanel() {
   const view = useMeetingStore((s) => s.view);
-  const meetingId = useMeetingStore((s) => s.meetingId);
   const startMeeting = useMeetingStore((s) => s.startMeeting);
   const reset = useMeetingStore((s) => s.reset);
 
@@ -26,85 +24,115 @@ export function CommPanel() {
     return a ?? { id, name: display(id).replace(/\b\w/g, (c) => c.toUpperCase()), color: "#9ca3af", emoji: "•", role: "" };
   };
 
+  const maxLevel = useUiStore((s) => s.maxLevel);
+  const setMaxLevel = useUiStore((s) => s.setMaxLevel);
+
   const [scenario, setScenario] = useState("");
-  const [level, setLevel] = useState(3);
-  const [note, setNote] = useState("");
-  const [saved, setSaved] = useState<Meeting[]>([]);
-  const [showSaved, setShowSaved] = useState(false);
+  const [groups, setGroups] = useState<MemoryGroup[]>([]);
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  const [activeMeetings, setActiveMeetings] = useState<{ id: string; scenario: string; name: string | null }[]>([]);
+  const [showMem, setShowMem] = useState(false);
   const closeRef = useRef<null | (() => void)>(null);
 
   useEffect(() => () => closeRef.current?.(), []);
+  useEffect(() => { listGroups().then(setGroups).catch(() => {}); }, []);
 
-  const refreshSaved = async () => {
-    try { setSaved(await listMeetings()); } catch { /* ignore */ }
+  const activeGroup = groups.find((g) => g.id === activeGroupId) || null;
+
+  const refreshGroup = async (id: string) => {
+    try { const d = await getGroup(id); setActiveMeetings(d.meetings.reverse()); } catch { setActiveMeetings([]); }
+  };
+  const onNewGroup = async () => {
+    const g = await createGroup();
+    setGroups((gs) => [g, ...gs]);
+    setActiveGroupId(g.id);
+    setActiveMeetings([]);
+  };
+  const onSelectGroup = async (id: string) => { setActiveGroupId(id); refreshGroup(id); };
+  const onRenameGroup = async (id: string, cur: string) => {
+    const name = window.prompt("Rename this hippocampus session", cur);
+    if (name && name.trim()) { await renameGroup(id, name.trim()); setGroups(await listGroups()); }
   };
 
   const onStart = async () => {
     const s = scenario.trim();
     if (!s) return;
     closeRef.current?.();
-    const m = await createMeeting(s, level);
+    // Ensure an active hippocampus session (create one named from the scenario).
+    let gid = activeGroupId;
+    if (!gid) {
+      const g = await createGroup(s.slice(0, 40));
+      gid = g.id;
+      setGroups((gs) => [g, ...gs]);
+      setActiveGroupId(gid);
+    }
+    const m = await createMeeting(s, maxLevel, gid);
     startMeeting(m.id, s);
-    closeRef.current = streamMeeting(m.id, (e) => useMeetingStore.getState().ingest(e));
+    setScenario("");
+    closeRef.current = streamMeeting(m.id, (e) => {
+      useMeetingStore.getState().ingest(e);
+      if (e.type === "meeting_end" && gid) refreshGroup(gid);
+    });
   };
 
-  const onProceed = async () => {
-    if (!meetingId) return;
-    await proceedMeeting(meetingId, note.trim() || undefined);
-    setNote("");
-  };
-
-  const onEnd = () => { closeRef.current?.(); reset(); };
-
-  const onLoad = async (id: string) => {
+  const onReplay = async (id: string) => {
     closeRef.current?.();
     const evs = await fetchMeetingEvents(id);
     useMeetingStore.getState().loadEvents(id, evs);
-    setShowSaved(false);
+    setShowMem(false);
   };
 
-  const onRename = async (id: string, current: string) => {
-    const name = window.prompt("Rename this memory state", current || "");
-    if (name && name.trim()) { await renameMeeting(id, name.trim()); refreshSaved(); }
-  };
+  const onNewQuestion = () => { closeRef.current?.(); reset(); };
 
   const idle = view.status === "idle";
 
   return (
-    <div className="flex h-full flex-col bg-[#0f1420] text-slate-100">
+    <div className="flex h-full flex-col text-slate-100">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
-        <div>
+        <div className="min-w-0">
           <div className="text-sm font-semibold">🧠 Brain Region Society</div>
-          <div className="text-[10px] text-slate-400">
-            {idle ? "ready" : view.scenario}
+          <div className="truncate text-[10px] text-slate-400">
+            {activeGroup ? `session: ${activeGroup.name}` : "no session — one starts on your first question"}
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => { setShowSaved((v) => !v); refreshSaved(); }}
+          <button onClick={() => { setShowMem((v) => !v); listGroups().then(setGroups); if (activeGroupId) refreshGroup(activeGroupId); }}
             className="rounded border border-slate-700 px-2 py-1 text-[11px] text-slate-300 hover:border-sky-500"
-            title="Hippocampus — saved memory states"
-          >🧬 Memory</button>
+            title="Hippocampus — conversation sessions">🧬 Hippocampus</button>
           {!idle && (
-            <button onClick={onEnd} className="rounded border border-slate-700 px-2 py-1 text-[11px] text-slate-300 hover:border-red-500">
-              {view.status === "complete" || view.status === "error" ? "✕ Close" : "End"}
+            <button onClick={onNewQuestion} className="rounded border border-slate-700 px-2 py-1 text-[11px] text-slate-300 hover:border-amber-500">
+              + New question
             </button>
           )}
         </div>
       </div>
 
-      {/* Saved memory states drawer */}
-      {showSaved && (
-        <div className="max-h-48 overflow-y-auto border-b border-slate-800 bg-[#0b1018] p-2">
-          {saved.length === 0 && <div className="p-2 text-[11px] text-slate-500">No saved sessions yet.</div>}
-          {saved.map((m) => (
-            <div key={m.id} className="flex items-center justify-between gap-2 rounded px-2 py-1 hover:bg-slate-800/50">
-              <button onClick={() => onLoad(m.id)} className="flex-1 truncate text-left text-[12px]" title={m.scenario}>
-                <span className="text-slate-200">{m.name || m.scenario}</span>
-                <span className="ml-2 text-[10px] text-slate-500">{m.status}</span>
-              </button>
-              <button onClick={() => onRename(m.id, m.name || m.scenario)} className="text-[10px] text-slate-400 hover:text-sky-400">rename</button>
+      {/* Hippocampus drawer */}
+      {showMem && (
+        <div className="max-h-72 overflow-y-auto border-b border-slate-800 bg-[#0b1018] p-2">
+          <button onClick={onNewGroup} className="mb-2 w-full rounded bg-sky-600 py-1.5 text-[12px] font-semibold text-white hover:bg-sky-500">
+            + New session
+          </button>
+          {groups.length === 0 && <div className="p-2 text-[11px] text-slate-500">No sessions yet.</div>}
+          {groups.map((g) => (
+            <div key={g.id} className={`rounded ${g.id === activeGroupId ? "bg-slate-800/70" : ""}`}>
+              <div className="flex items-center justify-between gap-2 px-2 py-1">
+                <button onClick={() => onSelectGroup(g.id)} className="flex-1 truncate text-left text-[12px]">
+                  <span className={g.id === activeGroupId ? "text-sky-300" : "text-slate-200"}>{g.name}</span>
+                  <span className="ml-2 text-[10px] text-slate-500">{g.meeting_count ?? 0} q</span>
+                </button>
+                <button onClick={() => onRenameGroup(g.id, g.name)} className="text-[10px] text-slate-400 hover:text-sky-400">rename</button>
+              </div>
+              {g.id === activeGroupId && activeMeetings.length > 0 && (
+                <div className="mb-1 ml-3 border-l border-slate-700 pl-2">
+                  {activeMeetings.map((m) => (
+                    <button key={m.id} onClick={() => onReplay(m.id)}
+                      className="block w-full truncate py-0.5 text-left text-[11px] text-slate-400 hover:text-amber-300"
+                      title={m.scenario}>↻ {m.name || m.scenario}</button>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -112,20 +140,16 @@ export function CommPanel() {
 
       {/* Body */}
       {idle ? (
-        <StartScreen
-          scenario={scenario} setScenario={setScenario}
-          level={level} setLevel={setLevel} onStart={onStart}
-        />
+        <StartScreen scenario={scenario} setScenario={setScenario} level={maxLevel} setLevel={setMaxLevel} onStart={onStart} />
       ) : (
-        <MeetingScreen info={info} onProceed={onProceed} note={note} setNote={setNote} />
+        <MeetingScreen info={info} />
       )}
     </div>
   );
 }
 
 function StartScreen({ scenario, setScenario, level, setLevel, onStart }: {
-  scenario: string; setScenario: (s: string) => void;
-  level: number; setLevel: (n: number) => void; onStart: () => void;
+  scenario: string; setScenario: (s: string) => void; level: number; setLevel: (n: number) => void; onStart: () => void;
 }) {
   const examples = [
     "You see a lion and feel afraid",
@@ -138,25 +162,20 @@ function StartScreen({ scenario, setScenario, level, setLevel, onStart }: {
       <div className="text-center text-slate-300">
         <h2 className="text-lg font-semibold">Pose a scenario to the brain</h2>
         <p className="mt-1 text-[12px] text-slate-400">
-          The three divisions assess it, recruit the regions involved, deliberate, vote on an
-          ordered plan, then implement it and give a final answer.
+          The divisions assess it, recruit the regions involved, deliberate, vote on an ordered
+          plan, then implement it and give a final answer.
         </p>
       </div>
 
-      <textarea
-        value={scenario}
-        onChange={(e) => setScenario(e.target.value)}
+      <textarea value={scenario} onChange={(e) => setScenario(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) onStart(); }}
         placeholder="Describe a scenario the brain should process…"
-        className="min-h-[80px] rounded-lg border border-slate-700 bg-[#0b1018] p-3 text-[13px] outline-none focus:border-amber-500"
-      />
+        className="min-h-[80px] rounded-lg border border-slate-700 bg-[#0b1018] p-3 text-[13px] outline-none focus:border-amber-500" />
 
       <div className="flex flex-wrap gap-2">
         {examples.map((ex) => (
           <button key={ex} onClick={() => setScenario(ex)}
-            className="rounded-full border border-slate-700 px-3 py-1 text-[11px] text-slate-300 hover:border-amber-500">
-            {ex}
-          </button>
+            className="rounded-full border border-slate-700 px-3 py-1 text-[11px] text-slate-300 hover:border-amber-500">{ex}</button>
         ))}
       </div>
 
@@ -165,9 +184,7 @@ function StartScreen({ scenario, setScenario, level, setLevel, onStart }: {
         <div className="flex rounded-full border border-slate-700 p-0.5">
           {[2, 3, 4, 5].map((n) => (
             <button key={n} onClick={() => setLevel(n)}
-              className={`px-3 py-1 text-[11px] rounded-full ${level === n ? "bg-amber-500 text-black font-semibold" : "text-slate-300"}`}>
-              L{n}
-            </button>
+              className={`px-3 py-1 text-[11px] rounded-full ${level === n ? "bg-amber-500 text-black font-semibold" : "text-slate-300"}`}>L{n}</button>
           ))}
         </div>
         <span className="text-[10px] text-slate-500">(deeper = more specialized regions)</span>
@@ -181,10 +198,7 @@ function StartScreen({ scenario, setScenario, level, setLevel, onStart }: {
   );
 }
 
-function MeetingScreen({ info, onProceed, note, setNote }: {
-  info: (id: string) => { id: string; name: string; color: string; emoji: string; role: string };
-  onProceed: () => void; note: string; setNote: (s: string) => void;
-}) {
+function MeetingScreen({ info }: { info: (id: string) => { id: string; name: string; color: string; emoji: string; role: string } }) {
   const view = useMeetingStore((s) => s.view);
   const bodyRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -197,7 +211,6 @@ function MeetingScreen({ info, onProceed, note, setNote }: {
 
   return (
     <>
-      {/* stage pills */}
       <div className="flex flex-wrap gap-1 border-b border-slate-800 px-3 py-2">
         {STAGE_ORDER.map((st, i) => (
           <span key={st}
@@ -211,7 +224,6 @@ function MeetingScreen({ info, onProceed, note, setNote }: {
       </div>
 
       <div ref={bodyRef} className="flex-1 space-y-4 overflow-y-auto p-4 text-[13px]">
-        {/* Assessment */}
         {Object.keys(view.assessments).length > 0 && (
           <Section title="Assessment — which sub-regions are involved">
             {Object.entries(view.assessments).map(([div, picks]) => (
@@ -223,7 +235,6 @@ function MeetingScreen({ info, onProceed, note, setNote }: {
           </Section>
         )}
 
-        {/* Recruitment */}
         {view.summons.length > 0 && (
           <Section title="Recruitment — regions called in">
             {view.summons.map((s, i) => (
@@ -235,21 +246,18 @@ function MeetingScreen({ info, onProceed, note, setNote }: {
           </Section>
         )}
 
-        {/* Round 1 contributions */}
         {view.contributions.length > 0 && (
           <Section title="Round 1 — contributions">
             {view.contributions.map((c, i) => <Bubble key={i} a={info(c.agentId)} text={c.text} />)}
           </Section>
         )}
 
-        {/* Round 2 deliberation */}
         {round2Msgs.length > 0 && (
           <Section title="Round 2 — deliberation">
             {round2Msgs.map((m) => <Bubble key={m.key} a={info(m.agentId)} text={m.text} />)}
           </Section>
         )}
 
-        {/* Flow + votes */}
         {view.ordering.length > 0 && (
           <Section title="Proposed flow">
             <div className="text-[12px] text-sky-300">{view.ordering.map(display).join("  →  ")}</div>
@@ -272,14 +280,12 @@ function MeetingScreen({ info, onProceed, note, setNote }: {
           </Section>
         )}
 
-        {/* Merges */}
         {view.merges.map((m, i) => (
           <div key={i} className="rounded border border-pink-800 bg-pink-950/40 px-3 py-1.5 text-[11px] text-pink-200">
             ⊕ {info(m.left_id).name} + {info(m.right_id).name} answer together as <b>{m.label}</b>
           </div>
         ))}
 
-        {/* Implementation */}
         {view.implement.length > 0 && (
           <Section title="Implementation — in flow order">
             {view.implement.slice().sort((a, b) => a.order - b.order).map((im) => (
@@ -292,12 +298,11 @@ function MeetingScreen({ info, onProceed, note, setNote }: {
           </Section>
         )}
 
-        {/* Final answer */}
         {view.finalAnswer && (
           <div className="rounded-lg border border-amber-700 bg-amber-950/30 p-3">
             <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-amber-400">Final answer</div>
             <div className="whitespace-pre-wrap text-[13px] text-amber-50">{view.finalAnswer}</div>
-            {view.memoryName && <div className="mt-2 text-[10px] text-slate-500">💾 saved to hippocampus as “{view.memoryName}”</div>}
+            {view.memoryName && <div className="mt-2 text-[10px] text-slate-500">💾 saved to this session’s hippocampus memory</div>}
           </div>
         )}
 
@@ -305,25 +310,6 @@ function MeetingScreen({ info, onProceed, note, setNote }: {
           <div className="rounded border border-red-800 bg-red-950/40 p-2 text-[12px] text-red-300">Error: {view.errorText}</div>
         )}
       </div>
-
-      {/* Pause banner / proceed */}
-      {view.status === "paused" && (
-        <div className="border-t border-slate-800 bg-[#0b1018] p-3">
-          <div className="mb-2 text-[11px] text-slate-400">
-            Paused after <b className="text-slate-200">{view.pausedAfterStage && STAGE_LABELS[view.pausedAfterStage]}</b>.
-            Add a note as the moderator, or continue.
-          </div>
-          <div className="flex gap-2">
-            <input value={note} onChange={(e) => setNote(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") onProceed(); }}
-              placeholder="Optional moderator note…"
-              className="flex-1 rounded border border-slate-700 bg-[#0f1420] px-2 py-1.5 text-[12px] outline-none focus:border-amber-500" />
-            <button onClick={onProceed} className="rounded bg-amber-500 px-3 py-1.5 text-[12px] font-semibold text-black">
-              ▶ Proceed
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAgentStore } from "@/lib/agentStore";
 import { useIdleWander } from "@/lib/useIdleWander";
 import { fetchAgents } from "@/lib/api";
@@ -9,67 +9,82 @@ import { CommPanel } from "@/components/CommPanel";
 import { ControlBar } from "@/components/ControlBar";
 import { TerminalView } from "@/components/TerminalView";
 import { useUiStore } from "@/lib/uiStore";
+import type { Agent } from "@/types/agent";
 
 export default function Home() {
   const setAgents = useAgentStore((s) => s.setAgents);
   const agents = useAgentStore((s) => s.agents);
+  const leftView = useUiStore((s) => s.leftView);
+  const maxLevel = useUiStore((s) => s.maxLevel);
 
-  // Agents must load before the office can render sprites or the chat can
-  // attribute messages to a real persona. If the very first fetch fails
-  // (typically because the dev backend is restarting), retry with backoff
-  // until we get them — otherwise the office stays empty and every chat
-  // bubble falls back to "System / Facilitator" with no avatar, which is
-  // what surfaced as the "none of the agents have loaded yet" symptom.
+  const [allAgents, setAllAgents] = useState<Agent[]>([]);
+  const [rightWidth, setRightWidth] = useState(560);
+  const draggingRef = useRef(false);
+
+  // Load the full roster once (with retry/backoff while the backend warms up).
   useEffect(() => {
     let cancelled = false;
     let attempt = 0;
-
     const load = async () => {
       while (!cancelled) {
         try {
           const list = await fetchAgents();
           if (cancelled) return;
-          if (Array.isArray(list) && list.length > 0) {
-            setAgents(list);
-            return;
-          }
-          throw new Error("agents endpoint returned empty list");
+          if (Array.isArray(list) && list.length > 0) { setAllAgents(list); return; }
+          throw new Error("empty agents");
         } catch (err) {
           attempt += 1;
-          const delay = Math.min(500 * 2 ** Math.min(attempt, 5), 8000);
-          console.warn(`fetchAgents attempt ${attempt} failed, retry in ${delay}ms:`, err);
-          await new Promise((r) => setTimeout(r, delay));
+          await new Promise((r) => setTimeout(r, Math.min(500 * 2 ** Math.min(attempt, 5), 8000)));
         }
       }
     };
-
     load();
-    return () => {
-      cancelled = true;
-    };
-  }, [setAgents]);
+    return () => { cancelled = true; };
+  }, []);
 
-  // Idle agents wander around the office naturally
+  // Show only regions up to the chosen depth; raising the level re-adds the
+  // deeper ones, lowering it removes them.
+  useEffect(() => {
+    if (allAgents.length === 0) return;
+    const shown = allAgents.filter((a) => (a.level ?? 3) <= maxLevel);
+    setAgents(shown.length > 0 ? shown : allAgents);
+  }, [allAgents, maxLevel, setAgents]);
+
   useIdleWander();
-  const leftView = useUiStore((s) => s.leftView);
 
-  // minmax(0, fr) on BOTH columns is the key — default `fr` tracks have an
-  // implicit auto min-content sizing, so a single long token in the chat
-  // panel (a URL, a code identifier, …) lets that column grow past its 2fr
-  // share, squeezing the office column. The office is positioned in %, so
-  // narrower → rooms get stretched vertically (the "zoom/stretch" bug).
-  // Pairing it with min-w-0 + overflow-hidden on each section double-locks
-  // the chat column to its fr share regardless of content.
+  // Sidebar resize
+  useEffect(() => {
+    const move = (e: MouseEvent) => {
+      if (!draggingRef.current) return;
+      const w = Math.max(360, Math.min(900, window.innerWidth - e.clientX));
+      setRightWidth(w);
+    };
+    const up = () => { draggingRef.current = false; document.body.style.userSelect = ""; };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+    return () => { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
+  }, []);
+
   return (
-    <main className="grid grid-cols-1 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] h-screen w-screen overflow-hidden">
-      <section className="relative bg-[#1a1106] min-w-0 overflow-hidden">
-        <div className="absolute top-3 left-6 z-30 text-[10px] text-amber-200/80">
+    <main className="flex h-screen w-screen overflow-hidden">
+      <section className="relative min-w-0 flex-1 bg-[#0b1220] overflow-hidden">
+        <div className="absolute top-3 left-6 z-30 text-[10px] text-slate-300/80">
           BRAIN REGION SOCIETY · {agents.length} regions
         </div>
         <ControlBar />
         {leftView === "office" ? <OfficeView /> : <TerminalView />}
       </section>
-      <section className="flex flex-col bg-[#1e293b] border-l-4 border-[#5d4a2e] min-w-0 overflow-hidden">
+
+      <div
+        onMouseDown={() => { draggingRef.current = true; document.body.style.userSelect = "none"; }}
+        className="w-1.5 cursor-col-resize bg-[#0f172a] hover:bg-sky-600 transition-colors"
+        title="Drag to resize"
+      />
+
+      <section
+        className="flex flex-col bg-[#0f1420] overflow-hidden"
+        style={{ width: rightWidth, flex: "0 0 auto" }}
+      >
         <CommPanel />
       </section>
     </main>

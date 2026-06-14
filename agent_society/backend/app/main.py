@@ -202,9 +202,8 @@ class MeetingRequest(BaseModel):
     # Deepest ontology level the recruitment will descend to (2 = divisions only,
     # 3 = current authored regions, 4/5 = once those regions are authored).
     max_level: int = 3
-    # Carried for frontend compatibility; the brain-meeting flow ignores them.
-    enable_tools: bool = False
-    include_observer_context: bool = False
+    # Hippocampus group (conversation thread) this meeting belongs to.
+    group_id: str | None = None
 
 
 @app.post("/meetings")
@@ -212,26 +211,29 @@ async def create_meeting(req: MeetingRequest):
     meeting_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
 
+    group_context = ""
     async with get_db() as db:
+        if req.group_id:
+            async with db.execute("SELECT condensed FROM memory_groups WHERE id=?", (req.group_id,)) as c:
+                row = await c.fetchone()
+                group_context = (row["condensed"] if row and row["condensed"] else "")
         await db.execute(
-            "INSERT INTO meetings (id, scenario, status, created_at, max_level) VALUES (?, ?, 'pending', ?, ?)",
-            (meeting_id, req.scenario, now, req.max_level),
+            "INSERT INTO meetings (id, scenario, status, created_at, max_level, group_id) VALUES (?, ?, 'pending', ?, ?, ?)",
+            (meeting_id, req.scenario, now, req.max_level, req.group_id),
         )
         await db.commit()
 
     queue: asyncio.Queue = asyncio.Queue()
     _meeting_queues[meeting_id] = queue
-    _meeting_proceeds[meeting_id] = asyncio.Event()
-    _meeting_interjections[meeting_id] = []
 
     asyncio.create_task(
         run_brain_meeting(
             meeting_id,
             req.scenario,
             queue,
-            _meeting_proceeds[meeting_id],
-            _meeting_interjections[meeting_id],
             max_level=req.max_level,
+            group_id=req.group_id,
+            group_context=group_context,
         )
     )
 
@@ -240,9 +242,69 @@ async def create_meeting(req: MeetingRequest):
         "scenario": req.scenario,
         "status": "pending",
         "max_level": req.max_level,
-        "enable_tools": req.enable_tools,
-        "include_observer_context": req.include_observer_context,
+        "group_id": req.group_id,
     }
+
+
+# ── Hippocampus memory groups (ChatGPT-style conversation threads) ───────────
+
+class GroupRequest(BaseModel):
+    name: str | None = None
+
+
+@app.post("/memory_groups")
+async def create_group(req: GroupRequest):
+    gid = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    name = (req.name or "").strip() or f"Session {now[:10]}"
+    async with get_db() as db:
+        await db.execute(
+            "INSERT INTO memory_groups (id, name, created_at, condensed) VALUES (?, ?, ?, '')",
+            (gid, name, now),
+        )
+        await db.commit()
+    return {"id": gid, "name": name, "created_at": now, "condensed": "", "meeting_count": 0}
+
+
+@app.get("/memory_groups")
+async def list_groups():
+    async with get_db() as db:
+        async with db.execute(
+            """
+            SELECT g.*, (SELECT COUNT(*) FROM meetings m WHERE m.group_id = g.id) AS meeting_count
+            FROM memory_groups g ORDER BY g.created_at DESC
+            """
+        ) as cur:
+            rows = await cur.fetchall()
+    return [dict(r) for r in rows]
+
+
+@app.get("/memory_groups/{group_id}")
+async def get_group(group_id: str):
+    async with get_db() as db:
+        async with db.execute("SELECT * FROM memory_groups WHERE id=?", (group_id,)) as cur:
+            g = await cur.fetchone()
+        if not g:
+            raise HTTPException(status_code=404, detail="group not found")
+        async with db.execute(
+            "SELECT id, scenario, status, name, created_at FROM meetings WHERE group_id=? ORDER BY created_at ASC",
+            (group_id,),
+        ) as cur:
+            meetings = [dict(r) for r in await cur.fetchall()]
+    return {**dict(g), "meetings": meetings}
+
+
+@app.put("/memory_groups/{group_id}/name")
+async def rename_group(group_id: str, req: GroupRequest):
+    name = (req.name or "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="name cannot be empty")
+    async with get_db() as db:
+        cur = await db.execute("UPDATE memory_groups SET name=? WHERE id=?", (name, group_id))
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="group not found")
+        await db.commit()
+    return {"ok": True, "name": name}
 
 
 class ProceedRequest(BaseModel):

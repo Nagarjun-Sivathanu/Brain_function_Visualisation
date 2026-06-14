@@ -10,6 +10,7 @@ export interface Agent {
   expertise: string[];
   emoji: string;
   color: string;
+  level?: number;
 }
 
 export interface AgentMemory {

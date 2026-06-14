@@ -109,13 +109,16 @@ async def run_brain_meeting(
     meeting_id: str,
     scenario: str,
     queue: asyncio.Queue,
-    proceed_event: asyncio.Event | None = None,
-    interjections: list[str] | None = None,
     max_level: int = 3,
+    group_id: str | None = None,
+    group_context: str = "",
 ):
     em = Emitter(meeting_id, queue)
-    log.info(f"[brain-meeting {meeting_id[:8]}] START {scenario!r} maxlvl={max_level}")
+    log.info(f"[brain-meeting {meeting_id[:8]}] START {scenario!r} maxlvl={max_level} group={group_id}")
     transcript: list[dict] = []
+    # Prior session memory (the hippocampus group) injected into every prompt so
+    # regions can refer back to earlier questions in the same conversation.
+    mem = f"Earlier in this session (hippocampus memory):\n{group_context}\n\n" if group_context else ""
 
     async def stream_region(region_id: str, stage: str, system: str, user: str) -> str:
         await em.emit("agent_start", agent_id=region_id, stage=stage)
@@ -128,21 +131,6 @@ async def run_brain_meeting(
             log.warning(f"{region_id} stream failed: {e}")
         await em.emit("agent_end", agent_id=region_id)
         return "".join(parts).strip()
-
-    async def pause(completed: str, nxt: str):
-        if proceed_event is None:
-            return
-        await em.emit("phase_paused", completed_stage=completed, next_stage=nxt)
-        try:
-            await asyncio.wait_for(proceed_event.wait(), timeout=900.0)
-        except asyncio.TimeoutError:
-            pass
-        proceed_event.clear()
-        if interjections:
-            while interjections:
-                note = interjections.pop(0)
-                transcript.append({"id": "human", "name": "Moderator", "stage": "interjection", "text": note})
-                await em.emit("interjection", content=note)
 
     try:
         async with get_db() as db:
@@ -165,7 +153,7 @@ async def run_brain_meeting(
             kid_names = [onto.display_name(k) for k in kids] or ["(none)"]
             schema = ('{"assessments":[{"region":"<name>","involved":true|false,'
                       '"confidence":0.0-1.0,"reason":"short biological reason"}]}')
-            user = (f"Scenario: {scenario}\n\nYour candidate sub-regions:\n"
+            user = (f"{mem}Scenario: {scenario}\n\nYour candidate sub-regions:\n"
                     + "\n".join(f"- {n}" for n in kid_names)
                     + f"\n\nWhich are involved in this scenario? Reply ONLY JSON:\n{schema}")
             await em.emit("agent_start", agent_id=d, stage="assessment")
@@ -208,7 +196,7 @@ async def run_brain_meeting(
             schema = ('{"contribution":"2-3 sentences on what you do for this scenario",'
                       '"handles":["which part(s) of the scenario you handle"],'
                       '"triggers":[{"region":"<name>","kind":"excitatory|inhibitory|modulatory|gating","note":"why"}]}')
-            user = (f"Scenario: {scenario}\n\nWhat other regions have said:\n{_transcript(transcript)}\n\n"
+            user = (f"{mem}Scenario: {scenario}\n\nWhat other regions have said:\n{_transcript(transcript)}\n\n"
                     f"Regions you may interact with: {', '.join(conns) or 'n/a'}\n\n"
                     f"State your contribution, which parts you handle, and which other regions you "
                     f"trigger or gate (excitatory/inhibitory/modulatory/gating). Reply ONLY JSON:\n{schema}")
@@ -236,12 +224,10 @@ async def run_brain_meeting(
                     active.append(tid)
                     await asyncio.sleep(0.3)
 
-        await pause("round1", "round2")
-
         # ── 5. Round 2: deliberation, ordered flow, vote ─────────────────────
         await em.emit("stage_change", stage="round2")
         for rid in active:
-            user = (f"Scenario: {scenario}\n\nThe network so far:\n{_transcript(transcript)}\n\n"
+            user = (f"{mem}Scenario: {scenario}\n\nThe network so far:\n{_transcript(transcript)}\n\n"
                     f"Deliberate: spot holes or flaws, and name where you biologically help or "
                     f"interfere with another active region. 2-3 sentences.")
             text = await stream_region(rid, "round2", _sys(rid), user)
@@ -278,8 +264,6 @@ async def run_brain_meeting(
             vote = await parse_vote(raw)
             await em.emit("vote", agent_id=rid, position=vote["position"], confidence=vote["confidence"], reasoning=vote["reasoning"])
             await _persist_vote(meeting_id, rid, vote)
-
-        await pause("voting", "implementation")
 
         # ── 6. Bilateral merge of matching left/right pairs ──────────────────
         merges: dict[str, str] = {}  # member_id -> merged label id
@@ -334,7 +318,7 @@ async def run_brain_meeting(
 
         # ── 8. Final integrated answer (Brain) ───────────────────────────────
         await em.emit("stage_change", stage="final")
-        final_user = (f"Scenario: {scenario}\n\nFull network discussion:\n{_transcript(transcript)}\n\n"
+        final_user = (f"{mem}Scenario: {scenario}\n\nFull network discussion:\n{_transcript(transcript)}\n\n"
                       f"Processing order: {' → '.join(onto.display_name(o) for o in ordering)}\n\n"
                       f"As the integrating Brain, give the final answer: in 2-4 sentences, what does "
                       f"the brain do in this scenario and what is the outcome? Plain language.")
@@ -350,17 +334,28 @@ async def run_brain_meeting(
         await em.emit("agent_end", agent_id="brain")
         await em.emit("final_answer", text=final_answer, by="brain")
 
-        # ── 9. Hippocampus saves the session; agents return to idle ──────────
+        # ── 9. Hippocampus saves a CONDENSED record of the session ───────────
         name = scenario.strip()[:60]
+        regions_txt = ", ".join(onto.display_name(o) for o in ordering)
+        condensed_line = f'Q: "{name}" → active: {regions_txt}. Answer: {final_answer[:220]}'
         async with get_db() as db:
             await db.execute("UPDATE meetings SET status='complete', result_summary=?, name=? WHERE id=?",
                              (final_answer, name, meeting_id))
             now = datetime.now(timezone.utc).isoformat()
             cur = await db.execute(
                 "INSERT INTO memories (agent_id, memory_type, content, meeting_id, created_at) VALUES (?,?,?,?,?)",
-                ("brain", "meeting", f'Scenario "{name}": active network = '
-                 + ", ".join(onto.display_name(o) for o in ordering) + f". Outcome: {final_answer[:200]}", meeting_id, now))
+                ("brain", "meeting", condensed_line, meeting_id, now))
             mem_id = cur.lastrowid
+            # Append this meeting's condensed record to its hippocampus group, so
+            # later questions in the same group can refer back to it (capped).
+            if group_id:
+                async with db.execute("SELECT condensed FROM memory_groups WHERE id=?", (group_id,)) as c:
+                    row = await c.fetchone()
+                prior = (row["condensed"] if row and row["condensed"] else "")
+                lines = [l for l in prior.split("\n") if l.strip()]
+                lines.append(condensed_line)
+                new_condensed = "\n".join(lines[-12:])  # keep the last dozen exchanges
+                await db.execute("UPDATE memory_groups SET condensed=? WHERE id=?", (new_condensed, group_id))
             await db.commit()
         await em.emit("memory_saved", memory_id=mem_id, name=name)
         for rid in active:

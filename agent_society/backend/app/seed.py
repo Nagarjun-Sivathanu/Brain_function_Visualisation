@@ -12,8 +12,8 @@ async def seed():
             await db.execute(
                 """
                 INSERT INTO agents
-                    (id, name, role, model, fallback_model, temperature, personality_traits, expertise, emoji, color)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (id, name, role, model, fallback_model, temperature, personality_traits, expertise, emoji, color, level)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     name = excluded.name,
                     role = excluded.role,
@@ -23,7 +23,8 @@ async def seed():
                     personality_traits = excluded.personality_traits,
                     expertise = excluded.expertise,
                     emoji = excluded.emoji,
-                    color = excluded.color
+                    color = excluded.color,
+                    level = excluded.level
                 """,
                 (
                     agent["id"],
@@ -36,6 +37,7 @@ async def seed():
                     json.dumps(agent["expertise"]),
                     agent["emoji"],
                     agent["color"],
+                    agent.get("level", 3),
                 ),
             )
 

@@ -29,7 +29,18 @@ async def init_db():
                 personality_traits TEXT NOT NULL,
                 expertise TEXT NOT NULL,
                 emoji TEXT NOT NULL,
-                color TEXT NOT NULL
+                color TEXT NOT NULL,
+                level INTEGER NOT NULL DEFAULT 3
+            );
+
+            -- Hippocampus memory groups: a ChatGPT-style conversation thread.
+            -- Meetings belong to a group; `condensed` carries the running,
+            -- compressed memory injected into later meetings in the same group.
+            CREATE TABLE IF NOT EXISTS memory_groups (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                condensed TEXT NOT NULL DEFAULT ''
             );
 
             CREATE TABLE IF NOT EXISTS meetings (
@@ -39,7 +50,8 @@ async def init_db():
                 created_at TEXT NOT NULL,
                 result_summary TEXT,
                 name TEXT,
-                max_level INTEGER NOT NULL DEFAULT 3
+                max_level INTEGER NOT NULL DEFAULT 3,
+                group_id TEXT
             );
 
             -- Event-sourced timeline: every meeting event, ordered + timestamped.
@@ -113,6 +125,8 @@ async def init_db():
             cols = {row[1] async for row in cursor}
         if "fallback_model" not in cols:
             await db.execute("ALTER TABLE agents ADD COLUMN fallback_model TEXT")
+        if "level" not in cols:
+            await db.execute("ALTER TABLE agents ADD COLUMN level INTEGER NOT NULL DEFAULT 3")
 
         async with db.execute("PRAGMA table_info(meetings)") as cursor:
             mcols = {row[1] async for row in cursor}
@@ -120,5 +134,7 @@ async def init_db():
             await db.execute("ALTER TABLE meetings ADD COLUMN name TEXT")
         if "max_level" not in mcols:
             await db.execute("ALTER TABLE meetings ADD COLUMN max_level INTEGER NOT NULL DEFAULT 3")
+        if "group_id" not in mcols:
+            await db.execute("ALTER TABLE meetings ADD COLUMN group_id TEXT")
 
         await db.commit()
