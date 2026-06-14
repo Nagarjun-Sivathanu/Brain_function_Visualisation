@@ -59,7 +59,10 @@ export function OfficeView() {
         onPointerMove={onMove}
         onPointerUp={() => { dragId.current = null; }}
         onPointerLeave={() => { dragId.current = null; }}
-        onClick={() => { selectAgent(null); if (editing) select(null); }}
+        // Items call stopPropagation on pointer-down, so this only fires for
+        // clicks on empty floor — i.e. selection HOLDS until you click away.
+        onPointerDown={() => { if (editing) select(null); }}
+        onClick={() => { selectAgent(null); }}
         className="relative h-full w-full"
         style={{ background: "#1e293b", borderRadius: 8, overflow: "hidden", boxShadow: "inset 0 0 40px rgba(0,0,0,0.6)" }}
       >
