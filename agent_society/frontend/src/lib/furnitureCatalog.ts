@@ -54,50 +54,63 @@ export interface PlacedItem {
 let _idc = 0;
 const nid = () => `it_${Date.now().toString(36)}_${_idc++}`;
 
-function place(room: RoomId, key: string, lx: number, ly: number, z = 5, mul?: number): PlacedItem {
-  return { id: nid(), key, room, lx, ly, mul: mul ?? PIECE_BY_KEY[key].mul, z };
-}
-
-// The starting arrangement (what the editor opens with). Mirrors the coded
-// layout; the user can drag/scale/delete from here and it persists.
+// The starting arrangement (what the editor opens with). This is the layout the
+// user arranged in the in-app editor and exported; the user can keep dragging /
+// rotating / scaling from here and it persists to localStorage.
 export function defaultLayout(): PlacedItem[] {
-  const items: PlacedItem[] = [];
-  // Meeting = conference panel. A HEAD DESK across the top-centre with the three
-  // level-2 divisions (panel) standing behind it facing the room; recruited
-  // regions stand in audience rows below facing up toward the panel. The centre
-  // floor is intentionally clear so the audience has room to fill in.
-  items.push(place("meeting", "blackbd", 50, 6));        // board on the top wall
-  items.push(place("meeting", "windowF", 28, 5));
-  items.push(place("meeting", "windowF", 72, 5));
-  items.push(place("meeting", "table", 50, 26, 3, 2.5)); // head desk (panel sits behind)
-  // side decor only — kept clear of the audience floor (lx 14–86)
-  items.push(place("meeting", "palm", 5, 20));
-  items.push(place("meeting", "palm", 95, 20));
-  items.push(place("meeting", "bookshelf", 5, 52));
-  items.push(place("meeting", "woodCab", 95, 52));
-  items.push(place("meeting", "plant", 5, 86));
-  items.push(place("meeting", "plant", 95, 86));
-  // implementation
-  items.push(place("implementation", "blackbd", 50, 9, 5, 1.8));
-  items.push(place("implementation", "rugGreen", 50, 56, 2, 1.8));
-  items.push(place("implementation", "bookshelf", 13, 40));
-  items.push(place("implementation", "woodCab", 88, 40));
-  items.push(place("implementation", "deskMon", 50, 28));
-  items.push(place("implementation", "palm", 13, 86));
-  items.push(place("implementation", "plant", 87, 86));
-  items.push(place("implementation", "lamp", 50, 93));
-  // waiting corridor
-  items.push(place("waiting", "vending", 28, 8));
-  items.push(place("waiting", "plant", 75, 8));
-  items.push(place("waiting", "sideTbl", 25, 26));
-  items.push(place("waiting", "lamp", 76, 26));
-  items.push(place("waiting", "plant", 25, 44));
-  items.push(place("waiting", "chairTan", 75, 44));
-  items.push(place("waiting", "sideTbl", 25, 62));
-  items.push(place("waiting", "mirror", 78, 64));
-  items.push(place("waiting", "plant", 25, 82));
-  items.push(place("waiting", "fire", 60, 88));
-  return items;
+  const mk = (
+    room: RoomId, key: string, lx: number, ly: number, mul: number, z: number,
+    extra: Partial<PlacedItem> = {},
+  ): PlacedItem => ({ id: nid(), key, room, lx, ly, mul, z, ...extra });
+
+  return [
+    // ── meeting ──
+    mk("meeting", "windowF", 28, 5, 1, 5),
+    mk("meeting", "windowF", 72, 5, 1, 5),
+    mk("meeting", "fire", 49.6, 5.5, 1.2, 5, { flip: true }),
+    mk("meeting", "table", 56, 30.1, 2.5, 3),
+    mk("meeting", "globe", 35.8, 26.1, 1, 6),
+    mk("meeting", "vending", 10.3, 29.1, 1, 6),
+    mk("meeting", "deskMon", 82.8, 12.6, 1, 6),
+    mk("meeting", "filing", 93.4, 4.6, 1, 6),
+    mk("meeting", "palm", 5, 20, 1, 5),
+    mk("meeting", "palm", 95, 20, 1, 5),
+    mk("meeting", "bookshelf", 8, 46, 1, 5),
+    mk("meeting", "rugRed", 30.9, 63.5, 2.4, 6),
+    mk("meeting", "rugRed", 72.1, 63.5, 2.4, 6, { flip: true }),
+    mk("meeting", "lamp", 16, 69.9, 1, 6),
+    mk("meeting", "plant", 5, 86, 1, 5),
+    mk("meeting", "plant", 96.1, 85.4, 1, 5, { flip: true }),
+    mk("meeting", "plant", 90.5, 85.4, 1, 5),
+    mk("meeting", "plant", 10.6, 85.9, 1, 5, { flip: true }),
+    mk("meeting", "sofaTan", 26.6, 92.2, 1, 6),
+    mk("meeting", "sofaTan", 43.1, 92.2, 1, 6, { flip: true }),
+    mk("meeting", "sofaPink", 74.1, 93.3, 1, 6),
+
+    // ── implementation ──
+    mk("implementation", "blackbd", 29.6, 13.4, 1, 6),
+    mk("implementation", "blackbd", 51.6, 13.4, 1, 6, { flip: true }),
+    mk("implementation", "filing", 87.9, 5.2, 1, 6),
+    mk("implementation", "deskMon", 50, 28, 1.2, 5),
+    mk("implementation", "lamp", 33.5, 26, 1, 5),
+    mk("implementation", "bookshelf", 13, 40, 1, 5),
+    mk("implementation", "woodCab", 88, 40, 1, 5),
+    mk("implementation", "woodCab", 77, 40, 1, 5, { flip: true }),
+    mk("implementation", "rugGreen", 50, 56, 1.8, 2),
+    mk("implementation", "palm", 13, 86, 1, 5),
+    mk("implementation", "sofaGrey", 25.3, 90.8, 1, 6),
+    mk("implementation", "sofaGrey", 79.2, 90.3, 1, 6),
+
+    // ── waiting ──
+    mk("waiting", "vending", 28, 8, 1, 5),
+    mk("waiting", "plant", 75, 8, 1, 5),
+    mk("waiting", "sideTbl", 25, 26, 1, 5),
+    mk("waiting", "lamp", 76, 26, 1, 5),
+    mk("waiting", "plant", 25, 44, 1, 5),
+    mk("waiting", "chairTan", 75, 44, 1, 5),
+    mk("waiting", "sideTbl", 85, 86, 1, 5),
+    mk("waiting", "sideTbl", 65, 86, 1, 6, { flip: true }),
+  ];
 }
 
 export { nid as newId };
