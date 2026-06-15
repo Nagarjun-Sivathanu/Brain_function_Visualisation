@@ -60,7 +60,13 @@ export function EditPanel({ targetRoom }: { targetRoom: RoomId }) {
   };
 
   return (
-    <div className="absolute top-2 left-2 z-40 flex max-h-[94%] w-64 flex-col gap-2 rounded-lg border border-slate-700 bg-black/85 p-2 text-slate-200">
+    <div
+      // Keep interactions inside the panel from bubbling to the office floor,
+      // which would otherwise deselect the piece on pointer-down before a
+      // button's click (so resize / rotate / etc. would silently do nothing).
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+      className="absolute top-2 left-2 z-40 flex max-h-[94%] w-64 flex-col gap-2 rounded-lg border border-slate-700 bg-black/85 p-2 text-slate-200">
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-semibold">Office editor</span>
         <button onClick={() => setEditing(false)} className="rounded bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-black">Done</button>
