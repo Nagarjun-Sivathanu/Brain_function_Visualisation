@@ -32,6 +32,8 @@ export function EditPanel({ targetRoom }: { targetRoom: RoomId }) {
   const setEditing = useEditStore((s) => s.setEditing);
   const add = useEditStore((s) => s.add);
   const scale = useEditStore((s) => s.scale);
+  const rotate = useEditStore((s) => s.rotate);
+  const flip = useEditStore((s) => s.flip);
   const bump = useEditStore((s) => s.bump);
   const remove = useEditStore((s) => s.remove);
   const resetDefault = useEditStore((s) => s.resetDefault);
@@ -65,21 +67,31 @@ export function EditPanel({ targetRoom }: { targetRoom: RoomId }) {
       </div>
 
       <div className="text-[9px] leading-snug text-slate-400">
-        Click a piece to add it to <b className="text-amber-300">{targetRoom}</b>, then drag it anywhere.
-        Click a placed piece to select; use the controls below.
+        Click a piece below to add it to <b className="text-amber-300">{targetRoom}</b>, then
+        <b className="text-amber-300"> drag</b> it anywhere. Click a placed piece to select it.
       </div>
 
-      {sel && (
+      {sel ? (
         <div className="rounded border border-amber-700/60 bg-amber-950/30 p-1.5">
           <div className="mb-1 text-[10px] text-amber-300">Selected: {PIECE_BY_KEY[sel.key]?.label}</div>
           <div className="flex flex-wrap items-center gap-1 text-[11px]">
             <Btn onClick={() => scale(sel.id, -0.2)}>−</Btn>
             <span className="w-8 text-center tabular-nums">{sel.mul.toFixed(1)}×</span>
             <Btn onClick={() => scale(sel.id, 0.2)}>+</Btn>
+            <Btn onClick={() => rotate(sel.id, 90)}>↻ rotate</Btn>
+            <Btn onClick={() => flip(sel.id)}>⇄ flip</Btn>
             <Btn onClick={() => bump(sel.id, -1)}>↓z</Btn>
             <Btn onClick={() => bump(sel.id, 1)}>↑z</Btn>
             <Btn onClick={() => remove(sel.id)} danger>🗑 delete</Btn>
           </div>
+          <div className="mt-1 text-[8px] leading-snug text-slate-400">
+            Keys: <b>arrows</b> move (Shift = faster) · <b>R</b> rotate · <b>F</b> flip ·
+            <b> [ ]</b> resize · <b>, .</b> stacking · <b>Del</b> remove · <b>Esc</b> deselect
+          </div>
+        </div>
+      ) : (
+        <div className="rounded border border-slate-700 bg-slate-900/50 p-1.5 text-[9px] text-slate-400">
+          Select a placed piece to move, rotate (R), flip (F) or resize it.
         </div>
       )}
 

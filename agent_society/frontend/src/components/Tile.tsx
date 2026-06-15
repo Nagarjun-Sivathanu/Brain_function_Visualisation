@@ -25,9 +25,10 @@ export function useAtlasReady(): boolean {
  *  rendered at the shared PIXEL_SCALE so it matches the character sprites.
  *  Positioned (centered) at room-local lx/ly %. */
 export function Tile({
-  col, row, w, h, lx, ly, z = 5, mul = 1, interactive, selected, onPointerDown,
+  col, row, w, h, lx, ly, z = 5, mul = 1, rot = 0, flip = false, interactive, selected, onPointerDown,
 }: {
   col: number; row: number; w: number; h: number; lx: number; ly: number; z?: number; mul?: number;
+  rot?: number; flip?: boolean;
   interactive?: boolean; selected?: boolean; onPointerDown?: (e: React.PointerEvent) => void;
 }) {
   const s = PIXEL_SCALE * mul;
@@ -38,7 +39,7 @@ export function Tile({
       style={{
         left: `${lx}%`, top: `${ly}%`,
         width: w * 16 * s, height: h * 16 * s,
-        transform: "translate(-50%,-50%)",
+        transform: `translate(-50%,-50%) rotate(${rot}deg) scaleX(${flip ? -1 : 1})`,
         backgroundImage: `url("${INTERIOR_SHEET}")`,
         backgroundRepeat: "no-repeat",
         backgroundSize: `${ATLAS_W * s}px ${ATLAS_H * s}px`,

@@ -47,6 +47,8 @@ export interface PlacedItem {
   lx: number; ly: number; // room-local %
   mul: number;
   z: number;
+  rot?: number;      // rotation in degrees (0/90/180/270)
+  flip?: boolean;    // mirrored horizontally
 }
 
 let _idc = 0;

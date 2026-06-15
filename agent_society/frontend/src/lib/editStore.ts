@@ -32,7 +32,10 @@ interface EditState {
   select: (id: string | null) => void;
   add: (key: string, room: RoomId) => void;
   moveTo: (id: string, room: RoomId, lx: number, ly: number) => void;
+  nudge: (id: string, dlx: number, dly: number) => void;
   scale: (id: string, delta: number) => void;
+  rotate: (id: string, ddeg: number) => void;
+  flip: (id: string) => void;
   bump: (id: string, dz: number) => void;
   remove: (id: string) => void;
   resetDefault: () => void;
@@ -61,8 +64,26 @@ export const useEditStore = create<EditState>((set, get) => ({
     save(items); set({ items });
   },
 
+  nudge: (id, dlx, dly) => {
+    const items = get().items.map((it) =>
+      it.id === id
+        ? { ...it, lx: +Math.max(0, Math.min(100, it.lx + dlx)).toFixed(1), ly: +Math.max(0, Math.min(100, it.ly + dly)).toFixed(1) }
+        : it);
+    save(items); set({ items });
+  },
+
   scale: (id, delta) => {
     const items = get().items.map((it) => it.id === id ? { ...it, mul: Math.max(0.3, Math.min(8, +(it.mul + delta).toFixed(2))) } : it);
+    save(items); set({ items });
+  },
+
+  rotate: (id, ddeg) => {
+    const items = get().items.map((it) => it.id === id ? { ...it, rot: (((it.rot ?? 0) + ddeg) % 360 + 360) % 360 } : it);
+    save(items); set({ items });
+  },
+
+  flip: (id) => {
+    const items = get().items.map((it) => it.id === id ? { ...it, flip: !it.flip } : it);
     save(items); set({ items });
   },
 

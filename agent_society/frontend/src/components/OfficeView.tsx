@@ -30,6 +30,38 @@ export function OfficeView() {
 
   useEffect(() => { init(); }, [init]);
 
+  // Game-style keyboard editing for the selected piece: arrows nudge, R/Shift+R
+  // rotate, F flip, [ ] resize, , . change stacking, Delete removes, Esc deselects.
+  useEffect(() => {
+    if (!editing) return;
+    const onKey = (e: KeyboardEvent) => {
+      const st = useEditStore.getState();
+      const id = st.selectedId;
+      if (!id) return;
+      const it = st.items.find((i) => i.id === id);
+      if (!it) return;
+      const step = e.shiftKey ? 5 : 1;
+      switch (e.key) {
+        case "ArrowLeft":  st.nudge(id, -step, 0); break;
+        case "ArrowRight": st.nudge(id, step, 0); break;
+        case "ArrowUp":    st.nudge(id, 0, -step); break;
+        case "ArrowDown":  st.nudge(id, 0, step); break;
+        case "r": case "R": st.rotate(id, e.shiftKey ? -90 : 90); break;
+        case "f": case "F": st.flip(id); break;
+        case "[": st.scale(id, -0.2); break;
+        case "]": st.scale(id, 0.2); break;
+        case ",": st.bump(id, -1); break;
+        case ".": st.bump(id, 1); break;
+        case "Delete": case "Backspace": st.remove(id); break;
+        case "Escape": st.select(null); break;
+        default: return;
+      }
+      e.preventDefault();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [editing]);
+
   const officePoint = (e: React.PointerEvent) => {
     const el = officeRef.current;
     if (!el) return null;
@@ -77,6 +109,7 @@ export function OfficeView() {
                   if (!p) return null;
                   return (
                     <Tile key={it.id} col={p.col} row={p.row} w={p.w} h={p.h} lx={it.lx} ly={it.ly} z={it.z} mul={it.mul}
+                      rot={it.rot} flip={it.flip}
                       interactive={editing} selected={selectedId === it.id}
                       onPointerDown={editing ? (e) => { e.stopPropagation(); select(it.id); dragId.current = it.id; } : undefined} />
                   );
