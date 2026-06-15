@@ -85,24 +85,6 @@ export function OfficeView() {
             ))
           : (Object.values(ROOMS) as Room[]).map((room) => <ProceduralFurniture key={`pf-${room.id}`} room={room} />)}
 
-        {/* A chair under every seated region — drawn at the agent's ACTUAL seat
-            (so it can never drift away from them), above the floor furniture so
-            it's always visible. The three level-2 divisions get a red executive
-            chair (panel); recruited regions get a wood chair (audience). */}
-        {atlasReady && agents.map((agent) => {
-          const pos = positions[agent.id];
-          if (!pos || pos.room === "waiting") return null;
-          const isPanel = agent.level === 2 && pos.room === "meeting";
-          const chair = PIECE_BY_KEY[isPanel ? "chairRed" : "chairBrown"];
-          const b = ROOMS[pos.room].bounds;
-          return (
-            <div key={`chair-${agent.id}`} className="absolute pointer-events-none"
-              style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, height: `${b.h}%`, zIndex: 8 }}>
-              <Tile col={chair.col} row={chair.row} w={chair.w} h={chair.h} lx={pos.lx} ly={pos.ly + 2} z={8} mul={isPanel ? 1.15 : 1} />
-            </div>
-          );
-        })}
-
         <Connectome />
 
         {agents.map((agent) => {

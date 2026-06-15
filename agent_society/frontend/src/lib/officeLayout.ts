@@ -83,7 +83,7 @@ export function toOffice(room: RoomId, lx: number, ly: number): { x: number; y: 
 // Each entry: { lx, ly, w, h } — center coords + size.
 const ROOM_OBSTACLES: Record<RoomId, Array<{ lx: number; ly: number; w: number; h: number }>> = {
   meeting: [
-    { lx: 50, ly: 31, w: 50, h: 12 }, // head table across the top (panel)
+    { lx: 50, ly: 26, w: 40, h: 10 }, // head desk across the top (panel)
   ],
   implementation: [
     { lx: 50, ly: 5, w: 64, h: 8 }, // results screen on the top wall
@@ -314,17 +314,18 @@ function clamp(v: number, lo: number, hi: number): number {
 // store (not by slot), so divisions keep their head-table seats even after they
 // step out to the implementation room and come back.
 
-/** The three executive panel seats, across the top-centre (facing the room). */
+/** The three division panellists, standing across the top-centre behind the head
+ *  desk, facing down into the room. */
 const PANEL_SEATS = [
-  { lx: 31, ly: 19 }, { lx: 50, ly: 17 }, { lx: 69, ly: 19 },
+  { lx: 34, ly: 19 }, { lx: 50, ly: 18 }, { lx: 66, ly: 19 },
 ];
 export function panelSeat(i: number): { lx: number; ly: number } {
-  return PANEL_SEATS[i] ?? { lx: 50, ly: 17 };
+  return PANEL_SEATS[i] ?? { lx: 50, ly: 18 };
 }
 
 /** Audience rows below the panel — five to a row, centred, filling downward. */
 const AUD_COLS = 5;
-const AUD_TOP = 47;   // first row
+const AUD_TOP = 45;   // first row
 const AUD_BOT = 90;   // last row when many
 const AUD_DX = 16;    // horizontal spacing between seats (%)
 export function audienceSeat(i: number, n: number): { lx: number; ly: number } {

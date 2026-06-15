@@ -57,6 +57,13 @@ export function AgentSprite({ agent, room, lx, ly }: Props) {
   const charBase = baseFor(agent.id);
   const charFilter = outfitFilter(agent.id, agent.color);
 
+  // Resting facing: the panel (level-2 divisions) face SOUTH down into the room;
+  // everyone in the audience / implementation faces NORTH toward the panel/screen.
+  const restDir: Direction =
+    room === "meeting" ? (agent.level === 2 ? "south" : "north")
+    : room === "implementation" ? "north"
+    : "south";
+
   // ── Walk animation effect ──
   useEffect(() => {
     const sameTarget =
@@ -110,7 +117,7 @@ export function AgentSprite({ agent, room, lx, ly }: Props) {
       setIsWalkingLocal(false);
       setWalking(agent.id, false);
       setWalkFrame(0);
-      setDirection("south");
+      setDirection(restDir);
       if (stepInterval) clearInterval(stepInterval);
     }
 
@@ -121,6 +128,13 @@ export function AgentSprite({ agent, room, lx, ly }: Props) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room, lx, ly]);
+
+  // While standing still, face the resting direction for the current room
+  // (panel south, audience/implementation north). Covers the initial mount and
+  // room changes that don't trigger a walk.
+  useEffect(() => {
+    if (!isWalking) setDirection(restDir);
+  }, [restDir, isWalking]);
 
   return (
     <motion.button
@@ -166,7 +180,6 @@ export function AgentSprite({ agent, room, lx, ly }: Props) {
             base={charBase}
             dir={direction}
             walking={isWalking}
-            sitting={!isWalking && (room === "meeting" || room === "implementation")}
             frame={walkFrame}
             filter={charFilter}
             width={16 * PIXEL_SCALE}

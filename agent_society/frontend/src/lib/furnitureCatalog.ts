@@ -60,22 +60,21 @@ function place(room: RoomId, key: string, lx: number, ly: number, z = 5, mul?: n
 // layout; the user can drag/scale/delete from here and it persists.
 export function defaultLayout(): PlacedItem[] {
   const items: PlacedItem[] = [];
-  // Meeting = conference panel. A long HEAD TABLE across the top-centre with the
-  // three level-2 divisions (panel) seated behind it; recruited regions fill the
-  // open floor below in audience rows. Chairs are drawn dynamically under each
-  // seated region, so the centre floor is intentionally left clear.
-  items.push(place("meeting", "rugRed", 50, 26, 2, 2.6)); // dais rug under the panel
-  items.push(place("meeting", "table", 50, 31, 3, 2.3));   // head table
-  items.push(place("meeting", "blackbd", 50, 6));          // board on the top wall
+  // Meeting = conference panel. A HEAD DESK across the top-centre with the three
+  // level-2 divisions (panel) standing behind it facing the room; recruited
+  // regions stand in audience rows below facing up toward the panel. The centre
+  // floor is intentionally clear so the audience has room to fill in.
+  items.push(place("meeting", "blackbd", 50, 6));        // board on the top wall
   items.push(place("meeting", "windowF", 28, 5));
   items.push(place("meeting", "windowF", 72, 5));
+  items.push(place("meeting", "table", 50, 26, 3, 2.5)); // head desk (panel sits behind)
   // side decor only — kept clear of the audience floor (lx 14–86)
-  items.push(place("meeting", "palm", 5, 22));
-  items.push(place("meeting", "palm", 95, 22));
-  items.push(place("meeting", "bookshelf", 5, 55));
-  items.push(place("meeting", "woodCab", 95, 55));
-  items.push(place("meeting", "plant", 5, 88));
-  items.push(place("meeting", "plant", 95, 88));
+  items.push(place("meeting", "palm", 5, 20));
+  items.push(place("meeting", "palm", 95, 20));
+  items.push(place("meeting", "bookshelf", 5, 52));
+  items.push(place("meeting", "woodCab", 95, 52));
+  items.push(place("meeting", "plant", 5, 86));
+  items.push(place("meeting", "plant", 95, 86));
   // implementation
   items.push(place("implementation", "blackbd", 50, 9, 5, 1.8));
   items.push(place("implementation", "rugGreen", 50, 56, 2, 1.8));
