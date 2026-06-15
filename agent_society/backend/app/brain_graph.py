@@ -64,7 +64,32 @@ class MeetingState(TypedDict, total=False):
     transcript: list
     ordering: list
     merges: dict
+    actions: list
     final_answer: str
+
+
+def _node_key(rid: str) -> str:
+    """Key in the same `"<level>) <name>"` shape as cleaned_brain_anatomy.json."""
+    return f"{onto.level_of(rid)}) {onto.display_name(rid)}"
+
+
+def _activated_tree(divisions: list, active: list, confidences: dict, parent_of: dict) -> dict:
+    """Prune the anatomy tree to only the regions that were recruited, nested by
+    parent exactly like the source JSON, with each node's confidence attached."""
+    activated = list(divisions) + [r for r in active if r not in divisions]
+    kids: dict = {}
+    for rid in activated:
+        kids.setdefault(parent_of.get(rid), []).append(rid)
+
+    def node(rid: str) -> dict:
+        return {
+            "id": rid,
+            "level": onto.level_of(rid),
+            "confidence": confidences.get(rid),
+            "children": {_node_key(c): node(c) for c in kids.get(rid, [])},
+        }
+
+    return {_node_key(d): node(d) for d in divisions}
 
 
 # ── small helpers shared by the nodes ───────────────────────────────────────
@@ -128,6 +153,9 @@ def _build_graph(em: Emitter, sem: asyncio.Semaphore):
         present: set = set(state["present"])
         active: list = list(state["active"])
         wave: list = list(state["divisions"])
+        # Track who recruited whom + at what confidence, to build the start JSON.
+        confidences: dict = {d: 1.0 for d in state["divisions"]}  # divisions are seeds
+        parent_of: dict = {d: None for d in state["divisions"]}
 
         async def assess_one(parent: str):
             kids = [k for k in onto.children(parent)
@@ -172,6 +200,8 @@ def _build_graph(em: Emitter, sem: asyncio.Semaphore):
                     await em.emit("move", agent_id=rid, room="meeting")
                     present.add(rid)
                     active.append(rid)
+                    confidences[rid] = pick["confidence"]
+                    parent_of[rid] = parent
                     if onto.level_of(rid) < max_level:
                         next_wave.append(rid)
                     await asyncio.sleep(0.25)
@@ -179,6 +209,13 @@ def _build_graph(em: Emitter, sem: asyncio.Semaphore):
 
         if not active:  # nothing crossed threshold — let the divisions act
             active = list(state["divisions"])
+
+        # Start JSON: confidence-confirmed regions, nested like the source anatomy
+        # file, plus a flat name→score map for convenience.
+        tree = _activated_tree(state["divisions"], active, confidences, parent_of)
+        scores = {onto.display_name(r): confidences[r] for r in active if r in confidences}
+        await em.emit("assessment_json", tree=tree, scores=scores,
+                      threshold=CONF_THRESHOLD, count=len(scores))
         return {"active": active, "present": list(present)}
 
     # 4. round 1 — contribution + typed edges, each WAVE generated concurrently
@@ -350,12 +387,17 @@ def _build_graph(em: Emitter, sem: asyncio.Semaphore):
 
         texts = await asyncio.gather(*[impl_one(rid, label) for rid, label in speakers])  # concurrent
         step = 0
+        actions: list = []
         for (rid, label), text in zip(speakers, texts):                                   # reveal in flow order
             speak_id = label or rid
             step += 1
-            await _reveal(em, speak_id, "implementation", (text or "").strip())
-            await em.emit("implement", agent_id=speak_id, order=step, text=(text or "").strip())
-        return {}
+            action_text = (text or "").strip()
+            name = ("Bilateral " + onto.display_name(label.replace("bilateral_", "")).title()
+                    if label else onto.display_name(rid))
+            await _reveal(em, speak_id, "implementation", action_text)
+            await em.emit("implement", agent_id=speak_id, order=step, text=action_text)
+            actions.append({"order": step, "id": speak_id, "name": name, "action": action_text})
+        return {"actions": actions}
 
     # 8. final — the integrating Brain streams the consolidated answer (one call)
     async def final(state: MeetingState) -> dict:
@@ -410,6 +452,17 @@ def _build_graph(em: Emitter, sem: asyncio.Semaphore):
                 await db.execute("UPDATE memory_groups SET condensed=? WHERE id=?", (new_condensed, group_id))
             await db.commit()
         await em.emit("memory_saved", memory_id=mem_id, name=name)
+
+        # Final JSON: the agreed processing flow + what each region does, plus the
+        # integrated answer — the end-state counterpart to assessment_json.
+        await em.emit(
+            "result_json",
+            scenario=scenario,
+            flow=[{"order": i + 1, "id": o, "name": onto.display_name(o)} for i, o in enumerate(ordering)],
+            steps=state.get("actions", []),
+            final_answer=final_answer,
+        )
+
         for rid in active + [d for d in divisions if d not in active]:
             await em.emit("move", agent_id=rid, room=("meeting" if onto.level_of(rid) == 2 else "waiting"))
         await em.emit("meeting_end", meeting_id=meeting_id)
@@ -451,7 +504,7 @@ async def run_brain_meeting(
         "meeting_id": meeting_id, "scenario": scenario, "max_level": max_level,
         "group_id": group_id, "mem": mem, "cap": _recruit_cap(max_level),
         "divisions": [], "active": [], "present": [], "transcript": [],
-        "ordering": [], "merges": {}, "final_answer": "",
+        "ordering": [], "merges": {}, "actions": [], "final_answer": "",
     }
     graph = _build_graph(em, sem)
     try:
