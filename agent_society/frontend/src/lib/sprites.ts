@@ -26,10 +26,10 @@ export const FRAME_W = 16;
 export const FRAME_H = 32;
 export const RUN_FRAMES = 6; // per direction
 
-// Run sheet (384×32) block order: left, up, right, down (6 frames each).
-export const RUN_BLOCK: Record<string, number> = { west: 0, north: 1, east: 2, south: 3 };
-// Idle sheet (64×32) frame order: left, up, down, right.
-export const IDLE_FRAME: Record<string, number> = { west: 0, north: 1, south: 2, east: 3 };
+// Run sheet (384×32) block order: left, up, down, right (6 frames each).
+export const RUN_BLOCK: Record<string, number> = { west: 0, north: 1, south: 2, east: 3 };
+// Idle sheet (64×32) frame order: left, up, right, down.
+export const IDLE_FRAME: Record<string, number> = { west: 0, north: 1, east: 2, south: 3 };
 
 // Stable per-region base body: hash the id so it's deterministic.
 export function baseFor(agentId: string): CharBase {
