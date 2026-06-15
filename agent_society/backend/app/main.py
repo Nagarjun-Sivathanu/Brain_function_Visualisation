@@ -13,7 +13,7 @@ from pydantic import BaseModel
 
 from app.database import init_db, get_db
 from app.seed import seed
-from app.brain_meeting import run_brain_meeting
+from app.brain_graph import run_brain_meeting  # LangGraph-based orchestrator
 from app.agents import build_system_prompt, STAGE_INSTRUCTIONS
 from app.models import call_agent_stream, parse_vote
 
