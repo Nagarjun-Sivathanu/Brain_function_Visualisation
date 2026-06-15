@@ -83,7 +83,7 @@ export function toOffice(room: RoomId, lx: number, ly: number): { x: number; y: 
 // Each entry: { lx, ly, w, h } — center coords + size.
 const ROOM_OBSTACLES: Record<RoomId, Array<{ lx: number; ly: number; w: number; h: number }>> = {
   meeting: [
-    { lx: 50, ly: 55, w: 40, h: 26 }, // central conference table
+    { lx: 50, ly: 31, w: 50, h: 12 }, // head table across the top (panel)
   ],
   implementation: [
     { lx: 50, ly: 5, w: 64, h: 8 }, // results screen on the top wall
@@ -306,30 +306,35 @@ function clamp(v: number, lo: number, hi: number): number {
 // level-2 divisions (seated first) take the main seats and summoned regions
 // fill the ring below.
 
-const MAIN_SEATS = [
-  { lx: 22, ly: 12 }, { lx: 50, ly: 10 }, { lx: 78, ly: 12 },
-];
+// ── Panel / conference seating (meeting room) ───────────────────────────────
+// The meeting room is laid out like a conference panel: the three level-2
+// divisions are the PANEL, seated at a head table across the top-centre facing
+// down; every recruited region is the AUDIENCE, seated in rows below facing up
+// toward the panel. Panel vs audience is decided by the agent's level in the
+// store (not by slot), so divisions keep their head-table seats even after they
+// step out to the implementation room and come back.
 
-/** Three fixed main seats for the level-2 divisions, across the top. */
-export function mainSeat(i: number): { lx: number; ly: number } {
-  return MAIN_SEATS[i] ?? { lx: 50, ly: 12 };
+/** The three executive panel seats, across the top-centre (facing the room). */
+const PANEL_SEATS = [
+  { lx: 31, ly: 19 }, { lx: 50, ly: 17 }, { lx: 69, ly: 19 },
+];
+export function panelSeat(i: number): { lx: number; ly: number } {
+  return PANEL_SEATS[i] ?? { lx: 50, ly: 17 };
 }
 
-/** Seats around the central table. Overflow past one ring spills onto larger
- *  concentric rings so many recruited regions still each get their own spot. */
-const PER_RING = 12;
-export function summonSeat(i: number, n: number): { lx: number; ly: number } {
-  if (n <= 0) return { lx: 50, ly: 52 };
-  const ring = Math.floor(i / PER_RING);
-  const inRing = i % PER_RING;
-  const ringCount = Math.min(PER_RING, Math.max(1, n - ring * PER_RING));
-  const rx = 19 + ring * 12;
-  const ry = 15 + ring * 11;
-  const angle = -Math.PI / 2 + (inRing / ringCount) * Math.PI * 2;
-  return {
-    lx: clamp(50 + rx * Math.cos(angle), 7, 93),
-    ly: clamp(52 + ry * Math.sin(angle), 22, 92),
-  };
+/** Audience rows below the panel — five to a row, centred, filling downward. */
+const AUD_COLS = 5;
+const AUD_TOP = 47;   // first row
+const AUD_BOT = 90;   // last row when many
+const AUD_DX = 16;    // horizontal spacing between seats (%)
+export function audienceSeat(i: number, n: number): { lx: number; ly: number } {
+  const rows = Math.max(1, Math.ceil(n / AUD_COLS));
+  const row = Math.floor(i / AUD_COLS);
+  const col = i % AUD_COLS;
+  const inRow = Math.min(AUD_COLS, n - row * AUD_COLS); // seats in THIS row
+  const lx = 50 + (col - (inRow - 1) / 2) * AUD_DX;     // centre each row
+  const ly = rows === 1 ? AUD_TOP + 12 : AUD_TOP + (row / (rows - 1)) * (AUD_BOT - AUD_TOP);
+  return { lx: clamp(lx, 8, 92), ly: clamp(ly, 40, 93) };
 }
 
 /** Audience-style seat grid in the implementation room (facing the screen). */
@@ -345,8 +350,9 @@ export function implSeat(i: number, n: number): { lx: number; ly: number } {
 
 export function roomSlot(room: RoomId, slot: number, count: number): { lx: number; ly: number } {
   if (room === "meeting") {
-    // Everyone sits around the table; divisions (seated first) take the top arc.
-    return summonSeat(slot, Math.max(6, count));
+    // Fallback only — the store assigns panel/audience seats by level. Treat a
+    // bare slot as an audience seat.
+    return audienceSeat(slot, Math.max(1, count));
   }
   if (room === "implementation") {
     return implSeat(slot, Math.max(2, count));

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { Agent, AgentStatus } from "@/types/agent";
-import { type RoomId, roomSlot, registerAgentOrder } from "@/lib/officeLayout";
+import { type RoomId, roomSlot, panelSeat, audienceSeat, registerAgentOrder } from "@/lib/officeLayout";
 
 export interface AgentPosition {
   room: RoomId;
@@ -33,12 +33,37 @@ interface AgentState {
 
 const EMPTY_ROOMS = (): Record<RoomId, string[]> => ({ waiting: [], meeting: [], implementation: [] });
 
-/** Recompute even positions for every agent in a room from its membership order. */
-function layoutRoom(members: string[], room: RoomId, positions: Record<string, AgentPosition>) {
+type LevelOf = (id: string) => number;
+
+/** Recompute even positions for every agent in a room from its membership order.
+ *  The meeting room is a conference panel: level-2 divisions take the executive
+ *  panel seats (by their order among divisions) and everyone else fills the
+ *  audience rows facing them — independent of arrival order, so divisions keep
+ *  their head-table seat after stepping out and back. */
+function layoutRoom(members: string[], room: RoomId, positions: Record<string, AgentPosition>, levelOf: LevelOf) {
+  if (room === "meeting") {
+    const panel = members.filter((id) => levelOf(id) === 2);
+    const audience = members.filter((id) => levelOf(id) !== 2);
+    panel.forEach((id, i) => {
+      const p = panelSeat(i);
+      positions[id] = { room, lx: p.lx, ly: p.ly };
+    });
+    audience.forEach((id, i) => {
+      const p = audienceSeat(i, audience.length);
+      positions[id] = { room, lx: p.lx, ly: p.ly };
+    });
+    return;
+  }
   members.forEach((id, i) => {
     const p = roomSlot(room, i, members.length);
     positions[id] = { room, lx: p.lx, ly: p.ly };
   });
+}
+
+/** Build a level lookup from an agent list. */
+function levelLookup(agents: Agent[]): LevelOf {
+  const m = new Map(agents.map((a) => [a.id, a.level]));
+  return (id) => m.get(id) ?? 99;
 }
 
 function initialState(agents: Agent[]) {
@@ -50,8 +75,9 @@ function initialState(agents: Agent[]) {
     (a.level === 2 ? roomMembers.meeting : roomMembers.waiting).push(a.id);
   }
   const positions: Record<string, AgentPosition> = {};
-  layoutRoom(roomMembers.meeting, "meeting", positions);
-  layoutRoom(roomMembers.waiting, "waiting", positions);
+  const levelOf = levelLookup(agents);
+  layoutRoom(roomMembers.meeting, "meeting", positions, levelOf);
+  layoutRoom(roomMembers.waiting, "waiting", positions, levelOf);
   return {
     agents,
     statuses: Object.fromEntries(agents.map((a) => [a.id, (a.level === 2 ? "meeting" : "idle") as AgentStatus])),
@@ -106,8 +132,9 @@ export const useAgentStore = create<AgentState>((set) => ({
       if (!roomMembers[room].includes(agentId)) roomMembers[room].push(agentId);
 
       const positions = { ...state.positions };
-      layoutRoom(roomMembers[room], room, positions);
-      left.forEach((r) => layoutRoom(roomMembers[r], r, positions));
+      const levelOf = levelLookup(state.agents);
+      layoutRoom(roomMembers[room], room, positions, levelOf);
+      left.forEach((r) => layoutRoom(roomMembers[r], r, positions, levelOf));
       return { roomMembers, positions };
     }),
 
@@ -125,7 +152,8 @@ export const useAgentStore = create<AgentState>((set) => ({
       });
       if (!rm[room].includes(agentId)) rm[room].push(agentId);
       const positions = { ...state.positions };
-      (Object.keys(rm) as RoomId[]).forEach((r) => layoutRoom(rm[r], r, positions));
+      const levelOf = levelLookup(state.agents);
+      (Object.keys(rm) as RoomId[]).forEach((r) => layoutRoom(rm[r], r, positions, levelOf));
       return { roomMembers: rm, positions };
     }),
 
@@ -134,7 +162,7 @@ export const useAgentStore = create<AgentState>((set) => ({
       const roomMembers = EMPTY_ROOMS();
       roomMembers[room] = state.agents.map((a) => a.id);
       const positions: Record<string, AgentPosition> = { ...state.positions };
-      layoutRoom(roomMembers[room], room, positions);
+      layoutRoom(roomMembers[room], room, positions, levelLookup(state.agents));
       return { roomMembers, positions };
     }),
 

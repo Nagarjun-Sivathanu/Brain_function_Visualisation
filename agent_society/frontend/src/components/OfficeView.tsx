@@ -8,13 +8,12 @@ import { Tile, useAtlasReady } from "@/components/Tile";
 import { EditPanel } from "@/components/EditPanel";
 import { useEditStore } from "@/lib/editStore";
 import { PIECE_BY_KEY } from "@/lib/furnitureCatalog";
-import { ROOMS, roomAtOffice, officeToLocal, summonSeat, implSeat, type Room, type RoomId } from "@/lib/officeLayout";
+import { ROOMS, roomAtOffice, officeToLocal, type Room, type RoomId } from "@/lib/officeLayout";
 import { Plant, Sofa, Rug, ConfTable, Chair, Screen, Podium } from "@/components/Furniture";
 
 export function OfficeView() {
   const agents = useAgentStore((s) => s.agents);
   const positions = useAgentStore((s) => s.positions);
-  const roomMembers = useAgentStore((s) => s.roomMembers);
   const selectAgent = useAgentStore((s) => s.selectAgent);
   const atlasReady = useAtlasReady();
 
@@ -86,21 +85,20 @@ export function OfficeView() {
             ))
           : (Object.values(ROOMS) as Room[]).map((room) => <ProceduralFurniture key={`pf-${room.id}`} room={room} />)}
 
-        {/* A chair under every seated region (meeting + implementation) — placed
-            at the same seats the agents use, so it scales with how many arrive. */}
-        {atlasReady && (Object.values(ROOMS) as Room[]).map((room) => {
-          if (room.id === "waiting") return null;
-          const count = (roomMembers[room.id] || []).length;
-          if (count === 0) return null;
-          const chair = PIECE_BY_KEY.chairBrown;
-          const b = room.bounds;
+        {/* A chair under every seated region — drawn at the agent's ACTUAL seat
+            (so it can never drift away from them), above the floor furniture so
+            it's always visible. The three level-2 divisions get a red executive
+            chair (panel); recruited regions get a wood chair (audience). */}
+        {atlasReady && agents.map((agent) => {
+          const pos = positions[agent.id];
+          if (!pos || pos.room === "waiting") return null;
+          const isPanel = agent.level === 2 && pos.room === "meeting";
+          const chair = PIECE_BY_KEY[isPanel ? "chairRed" : "chairBrown"];
+          const b = ROOMS[pos.room].bounds;
           return (
-            <div key={`seats-${room.id}`} className="absolute pointer-events-none"
-              style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, height: `${b.h}%`, zIndex: 4 }}>
-              {Array.from({ length: count }).map((_, i) => {
-                const c = room.id === "meeting" ? summonSeat(i, Math.max(6, count)) : implSeat(i, Math.max(2, count));
-                return <Tile key={i} col={chair.col} row={chair.row} w={chair.w} h={chair.h} lx={c.lx} ly={c.ly + 3} z={4} />;
-              })}
+            <div key={`chair-${agent.id}`} className="absolute pointer-events-none"
+              style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, height: `${b.h}%`, zIndex: 8 }}>
+              <Tile col={chair.col} row={chair.row} w={chair.w} h={chair.h} lx={pos.lx} ly={pos.ly + 2} z={8} mul={isPanel ? 1.15 : 1} />
             </div>
           );
         })}

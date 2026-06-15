@@ -2,7 +2,7 @@ import { create } from "zustand";
 import type { RoomId } from "@/lib/officeLayout";
 import { defaultLayout, newId, type PlacedItem } from "@/lib/furnitureCatalog";
 
-const KEY = "office_layout_v3";
+const KEY = "office_layout_v4";
 
 function load(): PlacedItem[] {
   if (typeof window === "undefined") return defaultLayout();
