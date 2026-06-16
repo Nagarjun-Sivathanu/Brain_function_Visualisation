@@ -95,6 +95,34 @@ def _activated_tree(divisions: list, active: list, confidences: dict, parent_of:
     return {_node_key(d): node(d) for d in divisions}
 
 
+# Plain-English legend so a downloaded file is self-explanatory to anyone (e.g.
+# the visualization team) without needing to read the code.
+_EXPORT_ABOUT = {
+    "assessment": ("Which regions the brain recruited for this scenario. 'tree' nests them by "
+                   "parent exactly like cleaned_brain_anatomy.json (key = '<level>) <name>'); each "
+                   "node has its id, level and the confidence 0-1 it was judged involved. 'scores' "
+                   "is a flat name->confidence map. Only regions at/above 'threshold' are included."),
+    "result": ("What the network decided. 'flow' is the agreed temporal processing order "
+               "(sensory/afferent -> relays -> cortical/decision -> motor/efferent). 'steps' is what "
+               "each region does at its step. 'final_answer' is the integrated plain-language outcome."),
+}
+
+
+def build_export(meeting_id: str, scenario: str, name, status,
+                 assessment, result) -> dict:
+    """The canonical shareable shape, used by both the on-disk file and the
+    /export endpoint so they're always identical."""
+    return {
+        "meeting_id": meeting_id,
+        "scenario": scenario,
+        "name": name,
+        "status": status,
+        "about": _EXPORT_ABOUT,
+        "assessment": assessment,   # null until the meeting reaches recruitment
+        "result": result,           # null until the meeting completes
+    }
+
+
 # ── small helpers shared by the nodes ───────────────────────────────────────
 async def _gen(sem: asyncio.Semaphore, region_id: str, temp: float, system: str,
                user: str, max_tokens: int) -> str:
@@ -469,11 +497,12 @@ def _build_graph(em: Emitter, sem: asyncio.Semaphore):
         # Also drop a standalone file on disk so a finished run is easy to hand
         # off (e.g. to the visualization team) without scraping the event log.
         try:
-            export = {"meeting_id": meeting_id, "scenario": scenario, "name": name,
-                      "assessment": state.get("assessment"), "result": result}
+            export = build_export(meeting_id, scenario, name, "complete",
+                                  state.get("assessment"), result)
             out_dir = Path(__file__).resolve().parents[1] / "data" / "exports"
             out_dir.mkdir(parents=True, exist_ok=True)
-            (out_dir / f"{meeting_id}.json").write_text(json.dumps(export, indent=2), encoding="utf-8")
+            (out_dir / f"{meeting_id}.json").write_text(
+                json.dumps(export, indent=2, ensure_ascii=False), encoding="utf-8")
         except Exception as e:
             log.warning(f"export file write failed: {e}")
 

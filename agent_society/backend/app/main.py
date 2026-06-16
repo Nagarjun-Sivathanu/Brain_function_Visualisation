@@ -8,12 +8,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import StreamingResponse, Response
 from pydantic import BaseModel
 
 from app.database import init_db, get_db
 from app.seed import seed
-from app.brain_graph import run_brain_meeting  # LangGraph-based orchestrator
+from app.brain_graph import run_brain_meeting, build_export  # LangGraph-based orchestrator
 from app.agents import build_system_prompt, STAGE_INSTRUCTIONS
 from app.models import call_agent_stream, parse_vote
 
@@ -393,16 +393,11 @@ async def export_meeting_json(meeting_id: str, download: bool = False):
             assessment = payload
         elif r["type"] == "result_json":
             result = payload
-    body = {
-        "meeting_id": meeting_id,
-        "scenario": meta["scenario"],
-        "name": meta["name"],
-        "status": meta["status"],
-        "assessment": assessment,   # null until the meeting reaches recruitment
-        "result": result,           # null until the meeting completes
-    }
+    body = build_export(meeting_id, meta["scenario"], meta["name"], meta["status"], assessment, result)
     headers = {"Content-Disposition": f'attachment; filename="meeting_{meeting_id[:8]}.json"'} if download else {}
-    return JSONResponse(content=body, headers=headers)
+    # Pretty-print so a downloaded / browser-opened file is human-readable.
+    return Response(content=json.dumps(body, indent=2, ensure_ascii=False),
+                    media_type="application/json", headers=headers)
 
 
 class RenameMeetingRequest(BaseModel):
