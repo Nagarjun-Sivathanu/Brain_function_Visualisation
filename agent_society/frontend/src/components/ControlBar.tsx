@@ -17,6 +17,21 @@ export function ControlBar() {
   const replaying = useMeetingStore((s) => s.replaying);
   const replayTo = useMeetingStore((s) => s.replayTo);
   const setReplaying = useMeetingStore((s) => s.setReplaying);
+  const meetingId = useMeetingStore((s) => s.meetingId);
+  const status = useMeetingStore((s) => s.view.status);
+
+  // Download the meeting's clean structured JSON (assessment + result). The
+  // backend sets Content-Disposition, so the browser saves it as a file.
+  const canDownload = !!meetingId && status === "complete";
+  const downloadJson = () => {
+    if (!meetingId) return;
+    const a = document.createElement("a");
+    a.href = `/api/meetings/${meetingId}/export?download=1`;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
 
   const playRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const total = events.length;
@@ -58,6 +73,14 @@ export function ControlBar() {
           title="Show/hide the interaction edges between regions"
           className={`px-3 py-1 rounded-full font-semibold ${showLinks ? "bg-fuchsia-500 text-black" : "text-slate-400"}`}
         >Links</button>
+        <button
+          onClick={downloadJson}
+          disabled={!canDownload}
+          title={canDownload
+            ? "Download this meeting's structured JSON (assessment + result)"
+            : "Available once the meeting finishes"}
+          className={`px-3 py-1 rounded-full font-semibold ${canDownload ? "text-emerald-300 hover:bg-slate-700" : "text-slate-600 cursor-not-allowed"}`}
+        >⤓ JSON</button>
       </div>
 
       {total > 0 && (
