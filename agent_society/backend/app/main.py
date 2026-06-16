@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel
 
 from app.database import init_db, get_db
@@ -367,6 +367,42 @@ async def get_meeting_events(meeting_id: str):
         payload = json.loads(d.pop("payload") or "{}")
         events.append({"type": d["type"], "seq": d["seq"], "t_ms": d["t_ms"], **payload})
     return events
+
+
+@app.get("/meetings/{meeting_id}/export")
+async def export_meeting_json(meeting_id: str, download: bool = False):
+    """Clean, shareable JSON for a meeting — just the two structured blobs:
+    `assessment` (recruited regions + confidence, nested like the anatomy file)
+    and `result` (the processing flow + what each region does + final answer).
+    Open in a browser to view, or add ?download=1 to save it as a file."""
+    async with get_db() as db:
+        async with db.execute("SELECT scenario, name, status FROM meetings WHERE id = ?", (meeting_id,)) as c:
+            meta = await c.fetchone()
+        if not meta:
+            raise HTTPException(status_code=404, detail="Meeting not found")
+        async with db.execute(
+            "SELECT type, payload FROM meeting_events WHERE meeting_id = ? "
+            "AND type IN ('assessment_json','result_json') ORDER BY seq ASC",
+            (meeting_id,),
+        ) as c:
+            rows = await c.fetchall()
+    assessment, result = None, None
+    for r in rows:
+        payload = json.loads(r["payload"] or "{}")
+        if r["type"] == "assessment_json":
+            assessment = payload
+        elif r["type"] == "result_json":
+            result = payload
+    body = {
+        "meeting_id": meeting_id,
+        "scenario": meta["scenario"],
+        "name": meta["name"],
+        "status": meta["status"],
+        "assessment": assessment,   # null until the meeting reaches recruitment
+        "result": result,           # null until the meeting completes
+    }
+    headers = {"Content-Disposition": f'attachment; filename="meeting_{meeting_id[:8]}.json"'} if download else {}
+    return JSONResponse(content=body, headers=headers)
 
 
 class RenameMeetingRequest(BaseModel):

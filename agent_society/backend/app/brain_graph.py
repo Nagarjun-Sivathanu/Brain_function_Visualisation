@@ -18,8 +18,10 @@ terminal view, replay and memory states keep working untouched.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional, TypedDict
 
 from langgraph.graph import StateGraph, START, END
@@ -65,6 +67,7 @@ class MeetingState(TypedDict, total=False):
     ordering: list
     merges: dict
     actions: list
+    assessment: dict
     final_answer: str
 
 
@@ -214,9 +217,9 @@ def _build_graph(em: Emitter, sem: asyncio.Semaphore):
         # file, plus a flat name→score map for convenience.
         tree = _activated_tree(state["divisions"], active, confidences, parent_of)
         scores = {onto.display_name(r): confidences[r] for r in active if r in confidences}
-        await em.emit("assessment_json", tree=tree, scores=scores,
-                      threshold=CONF_THRESHOLD, count=len(scores))
-        return {"active": active, "present": list(present)}
+        assessment = {"tree": tree, "scores": scores, "threshold": CONF_THRESHOLD, "count": len(scores)}
+        await em.emit("assessment_json", **assessment)
+        return {"active": active, "present": list(present), "assessment": assessment}
 
     # 4. round 1 — contribution + typed edges, each WAVE generated concurrently
     async def round1(state: MeetingState) -> dict:
@@ -455,13 +458,24 @@ def _build_graph(em: Emitter, sem: asyncio.Semaphore):
 
         # Final JSON: the agreed processing flow + what each region does, plus the
         # integrated answer — the end-state counterpart to assessment_json.
-        await em.emit(
-            "result_json",
-            scenario=scenario,
-            flow=[{"order": i + 1, "id": o, "name": onto.display_name(o)} for i, o in enumerate(ordering)],
-            steps=state.get("actions", []),
-            final_answer=final_answer,
-        )
+        result = {
+            "scenario": scenario,
+            "flow": [{"order": i + 1, "id": o, "name": onto.display_name(o)} for i, o in enumerate(ordering)],
+            "steps": state.get("actions", []),
+            "final_answer": final_answer,
+        }
+        await em.emit("result_json", **result)
+
+        # Also drop a standalone file on disk so a finished run is easy to hand
+        # off (e.g. to the visualization team) without scraping the event log.
+        try:
+            export = {"meeting_id": meeting_id, "scenario": scenario, "name": name,
+                      "assessment": state.get("assessment"), "result": result}
+            out_dir = Path(__file__).resolve().parents[1] / "data" / "exports"
+            out_dir.mkdir(parents=True, exist_ok=True)
+            (out_dir / f"{meeting_id}.json").write_text(json.dumps(export, indent=2), encoding="utf-8")
+        except Exception as e:
+            log.warning(f"export file write failed: {e}")
 
         for rid in active + [d for d in divisions if d not in active]:
             await em.emit("move", agent_id=rid, room=("meeting" if onto.level_of(rid) == 2 else "waiting"))

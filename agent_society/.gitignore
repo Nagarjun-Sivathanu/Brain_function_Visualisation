@@ -20,6 +20,8 @@ build/
 # ── Local DB (keep schema in code, not data) ─────────────
 backend/data/*.db
 backend/data/*.db-journal
+# Per-meeting JSON exports (generated artifacts)
+backend/data/exports/
 
 # ── IDE / OS ─────────────────────────────────────────────
 .vscode/
