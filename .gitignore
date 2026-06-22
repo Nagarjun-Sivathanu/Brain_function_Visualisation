@@ -10,3 +10,7 @@ dist/
 build/
 .DS_Store
 .claude/
+.llm_cache.json
+*.log
+swarm_results.json
+test_results.json
